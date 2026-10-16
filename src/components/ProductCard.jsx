@@ -26,7 +26,7 @@ function ProductCard({ product }) {
 					</Link>
 				)}
 				<span className="product-card__category">
-					<Link to={`/categoria/${encodeURIComponent(product.categoriaNombre || 'Producto')}`}>
+					<Link to={`/categoria/${product.categoriaId}`}>
 						{product.categoriaNombre || product.genero || 'Producto'}
 					</Link>
 				</span>

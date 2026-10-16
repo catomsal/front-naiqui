@@ -9,8 +9,10 @@ function Profile() {
 				<p className="catalog__eyebrow">Usuario</p>
 				<h1>Mi perfil</h1>
 			</header>
-			<p>Usuario: {user?.username}</p>
-			<p>Rol: {user?.rol}</p>
+			{/* Operador ||: valor alternativo si el dato no viene del back */}
+			<p>Nombre: {user.nombre || 'Sin nombre'}</p>
+			<p>Email: {user.email}</p>
+			<p>Rol: {user.rol}</p>
 		</main>
 	)
 }
