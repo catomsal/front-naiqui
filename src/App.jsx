@@ -9,6 +9,7 @@ import OrderList from './pages/OrderList.jsx'
 import OrderDetail from './pages/OrderDetail.jsx'
 import Login from './pages/Login.jsx'
 import Profile from './pages/Profile.jsx'
+import Favorites from './pages/Favorites.jsx'
 
 function App() {
 	return (
@@ -19,6 +20,7 @@ function App() {
 				<Route path="/producto/:id" element={<ProductDetail />} />
 				<Route path="/categoria/:id" element={<CategoryProducts />} />
 				<Route path="/login" element={<Login />} />
+				<Route path="/favoritos" element={<Favorites />} />
 				<Route
 					path="/carrito"
 					element={

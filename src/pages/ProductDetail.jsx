@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useCart } from '../context/useCart.js'
+import FavoriteButton from '../components/FavoriteButton.jsx'
 
 function ProductDetail() {
 	const { id } = useParams()
@@ -73,6 +74,7 @@ function ProductDetail() {
 					Añadir al carrito
 				</button>
 			)}
+			<FavoriteButton product={product} />
 			<Link to="/">Volver al catálogo</Link>
 		</main>
 	)

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import FavoriteButton from './FavoriteButton.jsx'
 
 function ProductCard({ product }) {
 	const formattedPrice = new Intl.NumberFormat('es-AR', {
@@ -33,10 +34,11 @@ function ProductCard({ product }) {
 			</div>
 			<div className="product-card__details">
 				<p className="product-card__brand">{product.marca}</p>
-			<h2>
-				<Link to={`/producto/${product.id}`}>{product.nombre}</Link>
-			</h2>
-			<p className="product-card__description">{product.descripcion}</p>
+				<h2>
+					<Link to={`/producto/${product.id}`}>{product.nombre}</Link>
+				</h2>
+				<p className="product-card__description">{product.descripcion}</p>
+				<FavoriteButton product={product} />
 				<div className="product-card__footer">
 					<strong>{formattedPrice}</strong>
 					<span>{product.stock > 0 ? `Stock: ${product.stock}` : 'Sin stock'}</span>
