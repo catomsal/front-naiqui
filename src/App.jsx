@@ -8,9 +8,10 @@ import Cart from './pages/Cart.jsx'
 import OrderList from './pages/OrderList.jsx'
 import OrderDetail from './pages/OrderDetail.jsx'
 import Login from './pages/Login.jsx'
-import LoginJWT from './components/LoginJWT.jsx'
 import Profile from './pages/Profile.jsx'
 import Favorites from './pages/Favorites.jsx'
+import Checkout from './pages/Checkout.jsx'
+import './App.css'
 
 function App() {
 	return (
@@ -21,7 +22,7 @@ function App() {
 				<Route path="/home" element={<ProductList />} />
 				<Route path="/producto/:id" element={<ProductDetail />} />
 				<Route path="/categoria/:id" element={<CategoryProducts />} />
-				<Route path="/login" element={<LoginJWT />} />
+				<Route path="/login" element={<Login />} />
 				<Route path="/login-context" element={<Login />} />
 				<Route path="/favoritos" element={<Favorites />} />
 				<Route
@@ -29,6 +30,14 @@ function App() {
 					element={
 						<ProtectedRoute>
 							<Cart />
+						</ProtectedRoute>
+					}
+				/>
+				<Route
+					path="/checkout"
+					element={
+						<ProtectedRoute>
+							<Checkout />
 						</ProtectedRoute>
 					}
 				/>

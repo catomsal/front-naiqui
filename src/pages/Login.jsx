@@ -1,6 +1,15 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth.js'
+import { apiRequest } from '../app/api.js'
+
+const demoAccounts = import.meta.env.DEV
+	? [
+		{ role: 'Usuario', email: 'demo@tppresencial.com', password: '1234' },
+		{ role: 'Vendedor', email: 'vendedor@tppresencial.com', password: '1234' },
+		{ role: 'Administrador', email: 'admin@tppresencial.com', password: '1234' },
+	]
+	: []
 
 function Login() {
 	const [credentials, setCredentials] = useState({ email: '', password: '' })
@@ -8,6 +17,7 @@ function Login() {
 	const [isLoading, setIsLoading] = useState(false)
 	const { login } = useAuth()
 	const navigate = useNavigate()
+	const location = useLocation()
 
 	function handleChange(event) {
 		setCredentials({
@@ -16,72 +26,92 @@ function Login() {
 		})
 	}
 
-	// async/await: la función espera la respuesta del back sin bloquear la UI
-	async function handleSubmit(event) {
-		event.preventDefault()
+	async function signIn(nextCredentials) {
 		setError('')
 		setIsLoading(true)
 
 		try {
-			const response = await fetch('http://localhost:8080/api/login', {
+			const data = await apiRequest('/login', {
 				method: 'POST',
-				headers: {
-					Accept: 'application/json',
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(credentials),
-				mode: 'cors',
+				body: JSON.stringify(nextCredentials),
 			})
-
-			const data = await response.json()
-
-			// Si la respuesta no es exitosa (ej: 401), lanzamos un error con el mensaje del back
-			if (!response.ok) {
-				throw new Error(data.mensaje || 'Error al iniciar sesión')
-			}
-
 			login(data)
-			navigate('/')
+			navigate(location.state?.from?.pathname || '/', { replace: true })
 		} catch (err) {
-			setError(err.message)
+			setError(err.message || 'No se pudo iniciar sesión')
 		} finally {
-			// Se ejecuta siempre, haya éxito o error
 			setIsLoading(false)
 		}
 	}
 
+	function handleSubmit(event) {
+		event.preventDefault()
+		signIn(credentials)
+	}
+
 	return (
-		<main className="catalog">
-			<header className="catalog__header">
-				<p className="catalog__eyebrow">Acceso</p>
-				<h1>Ingresar</h1>
-			</header>
-			{/* Renderizado condicional con &&: solo se muestra si hay error */}
-			{error && <p className="catalog__message">{error}</p>}
+		<main className="login-page">
+			<Link className="navbar__brand" to="/">naiqui<span>.</span></Link>
+			<div>
+				<h1>Ingresá a tu cuenta</h1>
+				<p>Continuá con tu compra y encontrá tus favoritos.</p>
+			</div>
+			{error && <p className="page-error" role="alert">{error}</p>}
 			<form onSubmit={handleSubmit}>
-				<input
-					type="email"
-					name="email"
-					value={credentials.email}
-					onChange={handleChange}
-					placeholder="Email"
-					required
-					disabled={isLoading}
-				/>
-				<input
-					type="password"
-					name="password"
-					value={credentials.password}
-					onChange={handleChange}
-					placeholder="Contraseña"
-					required
-					disabled={isLoading}
-				/>
-				{/* Renderizado condicional con operador ternario */}
-				<button type="submit" disabled={isLoading}>
+				<label htmlFor="email">
+					Correo electrónico
+					<input
+						type="email"
+						id="email"
+						name="email"
+						autoComplete="email"
+						value={credentials.email}
+						onChange={handleChange}
+						placeholder="tu@email.com"
+						required
+						disabled={isLoading}
+					/>
+				</label>
+				<label htmlFor="password">
+					Contraseña
+					<input
+						type="password"
+						id="password"
+						name="password"
+						autoComplete="current-password"
+						value={credentials.password}
+						onChange={handleChange}
+						placeholder="Tu contraseña"
+						required
+						disabled={isLoading}
+					/>
+				</label>
+				<button className="primary-button full-width" type="submit" disabled={isLoading}>
 					{isLoading ? 'Ingresando...' : 'Ingresar'}
 				</button>
 			</form>
+			{demoAccounts.length > 0 && (
+				<section className="demo-login" aria-labelledby="demo-login-title">
+					<div className="demo-login__heading">
+						<h2 id="demo-login-title">Accesos rápidos de demostración</h2>
+						<p>Entrá con un rol de prueba con un solo click.</p>
+					</div>
+					<div className="demo-login__options" role="group" aria-label="Ingresar con un usuario demo">
+						{demoAccounts.map((account) => (
+							<button
+								className="demo-login__button"
+								key={account.role}
+								type="button"
+								onClick={() => signIn(account)}
+								disabled={isLoading}
+							>
+								{isLoading ? 'Ingresando...' : `Entrar como ${account.role}`}
+							</button>
+						))}
+					</div>
+				</section>
+			)}
+			<Link className="text-link" to="/">Seguir explorando</Link>
 		</main>
 	)
 }

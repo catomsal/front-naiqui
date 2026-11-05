@@ -1,7 +1,12 @@
 import { Link } from 'react-router-dom'
 import FavoriteButton from './FavoriteButton.jsx'
+import ShoePlaceholder from './ShoePlaceholder.jsx'
 
 function ProductCard({ product }) {
+	const hasDiscount = Number(product.precioOriginal) > Number(product.precio)
+	const discount = hasDiscount
+		? Math.round((1 - Number(product.precio) / Number(product.precioOriginal)) * 100)
+		: 0
 	const formattedPrice = new Intl.NumberFormat('es-AR', {
 		style: 'currency',
 		currency: 'ARS',
@@ -10,42 +15,42 @@ function ProductCard({ product }) {
 
 	return (
 		<article className="product-card">
-			<div className="product-card__image-wrap">
+			<FavoriteButton product={product} />
+			<Link className="product-card__image-wrap" to={`/producto/${product.id}`}>
 				{product.imagenUrl ? (
-					<Link to={`/producto/${product.id}`}>
-						<img
-							className="product-card__image"
-							src={product.imagenUrl}
-							alt={product.nombre}
-						/>
-					</Link>
+					<img
+						className="product-card__image"
+						src={product.imagenUrl}
+						alt={product.nombre}
+					/>
 				) : (
-					<Link to={`/producto/${product.id}`}>
-						<div className="product-card__image-placeholder" aria-hidden="true">
-							<span>{product.marca || 'TPO'}</span>
-						</div>
-					</Link>
+					<span className="product-card__placeholder" aria-hidden="true">
+						<ShoePlaceholder />
+					</span>
 				)}
+				{hasDiscount && <span className="product-card__discount">{discount}% OFF</span>}
 				<span className="product-card__category">
-					<Link to={`/categoria/${product.categoriaId}`}>
-						{product.categoriaNombre || product.genero || 'Producto'}
-					</Link>
+					{product.categoriaNombre || 'Zapatillas'} · {product.genero || 'Unisex'}
 				</span>
-			</div>
+			</Link>
 			<div className="product-card__details">
 				<p className="product-card__brand">{product.marca}</p>
 				<h2>
 					<Link to={`/producto/${product.id}`}>{product.nombre}</Link>
 				</h2>
 				<p className="product-card__description">{product.descripcion}</p>
-				<FavoriteButton product={product} />
-				<div className="product-card__footer">
-					<strong>{formattedPrice}</strong>
-					<span>{product.stock > 0 ? `Stock: ${product.stock}` : 'Sin stock'}</span>
+				<div className="product-card__price-group">
+					{hasDiscount && (
+						<del className="product-card__old-price">
+							{new Intl.NumberFormat('es-AR', {
+								style: 'currency',
+								currency: 'ARS',
+								maximumFractionDigits: 0,
+							}).format(product.precioOriginal)}
+						</del>
+					)}
+					<strong className="product-card__price">{formattedPrice}</strong>
 				</div>
-				<Link className="product-card__buy" to={`/producto/${product.id}`}>
-					Comprar
-				</Link>
 			</div>
 		</article>
 	)

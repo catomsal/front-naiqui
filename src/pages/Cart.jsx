@@ -1,155 +1,161 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
+import ShoePlaceholder from '../components/ShoePlaceholder.jsx'
+import { formatPrice } from '../app/format.js'
 import {
-  fetchCartItems,
-  addToCart,
-  removeFromCart,
-  clearCart,
+	addToCart,
+	fetchCartItems,
+	removeCartItem,
+	updateCartItem,
 } from '../store/slices/cartSlice.js'
+import { useAuth } from '../context/useAuth.js'
 
 function Cart() {
-  const dispatch = useDispatch()
-  const { items, loading, error } = useSelector((state) => state.cart)
+	const dispatch = useDispatch()
+	const { user } = useAuth()
+	const { items, loading, error, initialized } = useSelector((state) => state.cart)
 
-  // Obtiene los items del carrito desde el backend al montar el componente
-  useEffect(() => {
-    dispatch(fetchCartItems())
-  }, [dispatch])
+	useEffect(() => {
+		if (user?.id && !initialized) dispatch(fetchCartItems(user.id))
+	}, [dispatch, initialized, user?.id])
 
-  // Llama a addToCart para que impacte directamente en la base de datos (POST /api/carrito)
-  const handleAddToCart = (productoId, talle = 40, cantidad = 1) => {
-    dispatch(addToCart({ productoId, talle, cantidad }))
-  }
+	const subtotal = items.reduce(
+		(total, item) =>
+			total + (Number(item.subtotal) || Number(item.precioUnitario) * item.cantidad),
+		0,
+	)
 
-  const handleRemove = (itemId) => {
-    dispatch(removeFromCart(itemId))
-  }
+	function addOne(item) {
+		dispatch(
+			addToCart({
+				userId: user.id,
+				productoId: item.productoId,
+				talle: item.talle,
+				cantidad: 1,
+			}),
+		)
+	}
 
-  const handleClear = () => {
-    dispatch(clearCart())
-  }
+	function removeOne(item) {
+		if (item.cantidad <= 1) return
+		dispatch(
+			updateCartItem({
+				userId: user.id,
+				itemId: item.id,
+				cantidad: item.cantidad - 1,
+			}),
+		)
+	}
 
-  // Calcula el total del carrito de zapatillas
-  const total = (items || []).reduce((acc, item) => {
-    const precio = item.precioUnitario || item.precio || 0
-    const cantidad = item.cantidad || 1
-    return acc + precio * cantidad
-  }, 0)
+	if (loading && !initialized) {
+		return <main className="store-page"><p className="muted">Cargando tu carrito...</p></main>
+	}
 
-  return (
-    <main className="catalog">
-      <header className="catalog__header">
-        <p className="catalog__eyebrow">Carrito de Compras (Redux Toolkit)</p>
-        <h1>Mi carrito de zapatillas</h1>
-        {loading && <p className="catalog__message">Sincronizando carrito con el servidor...</p>}
-        {error && (
-          <p className="catalog__message" style={{ color: '#dc2626' }}>
-            {error}
-          </p>
-        )}
-        {items && items.length > 0 && (
-          <p className="catalog__count">{items.length} zapatilla{items.length !== 1 ? 's' : ''} en el carrito</p>
-        )}
-      </header>
+	if (error && items.length === 0) {
+		return (
+			<main className="store-page">
+				<p className="page-error" role="alert">{error}</p>
+				<button className="secondary-button" type="button" onClick={() => dispatch(fetchCartItems(user.id))}>
+					Reintentar
+				</button>
+			</main>
+		)
+	}
 
-      {(!items || items.length === 0) && !loading ? (
-        <>
-          <p className="catalog__message">Tu carrito de zapatillas está vacío.</p>
-          <div style={{ margin: '1.5rem 0' }}>
-            <Link to="/" style={{ display: 'inline-block', marginBottom: '1rem', textDecoration: 'underline' }}>
-              Ir al catálogo para elegir zapatillas
-            </Link>
-            <br />
-            {/* Botón para probar que impacta en la DB */}
-            <button
-              type="button"
-              onClick={() => handleAddToCart(1, 41, 1)}
-              style={{ cursor: 'pointer', padding: '0.6rem 1rem' }}
-            >
-              + Agregar zapatilla demo (Impacta en DB)
-            </button>
-          </div>
-        </>
-      ) : (
-        <>
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            {items.map((item) => {
-              const itemId = item.id || item.productoId
-              const nombre = item.nombreProducto || item.nombre || `Zapatilla #${itemId}`
-              const precio = item.precioUnitario || item.precio || 0
-              const cantidad = item.cantidad || 1
-              const talle = item.talle ? `Talle: ${item.talle}` : 'Talle: 40'
+	return (
+		<main className="store-page">
+			<header className="page-heading">
+				<h1>Mi carrito</h1>
+				<p>{items.reduce((count, item) => count + item.cantidad, 0)} productos</p>
+			</header>
 
-              return (
-                <li
-                  key={item.id || `${itemId}-${item.talle}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '1rem 0',
-                    borderBottom: '1px solid #eee',
-                    gap: '1rem',
-                  }}
-                >
-                  <div>
-                    <h3 style={{ margin: '0 0 0.25rem 0' }}>{nombre}</h3>
-                    <p style={{ margin: 0, color: '#666', fontSize: '0.9rem' }}>
-                      {talle} · Cantidad: {cantidad}
-                    </p>
-                    <strong style={{ color: '#2D3277', display: 'block', marginTop: '0.25rem' }}>
-                      ${(precio * cantidad).toLocaleString('es-AR')}
-                    </strong>
-                  </div>
+			{error && (
+				<div className="page-error" role="alert">
+					<p>{error}</p>
+					<button className="text-link" type="button" onClick={() => dispatch(fetchCartItems(user.id))}>
+						Reintentar
+					</button>
+				</div>
+			)}
 
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <button
-                      type="button"
-                      onClick={() => handleAddToCart(item.productoId || item.id, item.talle || 40, 1)}
-                      title="Sumar 1 unidad en base de datos"
-                      style={{ padding: '0.4rem 0.75rem', cursor: 'pointer' }}
-                    >
-                      +1
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRemove(item.id)}
-                      style={{
-                        padding: '0.4rem 0.75rem',
-                        cursor: 'pointer',
-                        color: '#dc2626',
-                        background: 'none',
-                        border: '1px solid #dc2626',
-                        borderRadius: '4px',
-                      }}
-                    >
-                      Quitar
-                    </button>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
+			{items.length === 0 && !loading ? (
+				<div className="empty-state">
+					<h2>Tu carrito está vacío</h2>
+					<p>Encontrá tu próximo par favorito en el catálogo.</p>
+					<Link className="primary-button" to="/">Seguir comprando</Link>
+				</div>
+			) : (
+				<div className="cart-layout">
+					<section className="cart-items" aria-label="Productos en el carrito">
+						{items.map((item) => (
+							<article className="cart-item" key={item.id}>
+								<Link className="cart-item__image" to={`/producto/${item.productoId}`} aria-label={item.productoNombre}>
+									<ShoePlaceholder />
+								</Link>
+								<div className="cart-item__details">
+									<h2>
+										<Link to={`/producto/${item.productoId}`}>{item.productoNombre}</Link>
+									</h2>
+									<p>{item.color || 'Zapatillas'} · Talle {item.talle}</p>
+									<button
+										className="cart-item__remove"
+										type="button"
+										onClick={() => dispatch(removeCartItem({ userId: user.id, itemId: item.id }))}
+										disabled={loading}
+									>
+										Quitar
+									</button>
+								</div>
+								<div className="quantity-control" aria-label={`Cantidad: ${item.cantidad}`}>
+									<button
+										type="button"
+										aria-label="Reducir cantidad"
+										onClick={() => removeOne(item)}
+										disabled={loading || item.cantidad <= 1}
+									>
+										−
+									</button>
+									<span>{item.cantidad}</span>
+									<button
+										type="button"
+										aria-label="Aumentar cantidad"
+										onClick={() => addOne(item)}
+										disabled={loading}
+									>
+										+
+									</button>
+								</div>
+								<strong className="cart-item__subtotal">
+									{formatPrice(Number(item.subtotal) || Number(item.precioUnitario) * item.cantidad)}
+								</strong>
+							</article>
+						))}
+					</section>
 
-          <div style={{ margin: '1.5rem 0', padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-            <h2 style={{ margin: 0 }}>
-              Total: ${total.toLocaleString('es-AR')}
-            </h2>
-          </div>
-
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-            <button type="button" onClick={handleClear} style={{ cursor: 'pointer' }}>
-              Vaciar carrito
-            </button>
-            <Link to="/" style={{ alignSelf: 'center' }}>
-              Seguir comprando
-            </Link>
-          </div>
-        </>
-      )}
-    </main>
-  )
+					<aside className="summary-card">
+						<h2>Resumen</h2>
+						<div className="summary-row">
+							<span>Subtotal</span>
+							<span>{formatPrice(subtotal)}</span>
+						</div>
+						<div className="summary-row">
+							<span>Envío</span>
+							<span>A coordinar</span>
+						</div>
+						<div className="summary-total">
+							<span>Total</span>
+							<span>{formatPrice(subtotal)}</span>
+						</div>
+						<Link className="primary-button full-width" to="/checkout">
+							Ir a pagar
+						</Link>
+						<Link className="summary-card__continue" to="/">Seguir comprando</Link>
+					</aside>
+				</div>
+			)}
+		</main>
+	)
 }
 
 export default Cart

@@ -1,59 +1,169 @@
 import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import ProductCard from './ProductCard.jsx'
+import { apiRequest } from '../app/api.js'
 import './ProductList.css'
 
 function ProductList() {
 	const [products, setProducts] = useState([])
+	const [categories, setCategories] = useState([])
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState(null)
+	const [selectedCategory, setSelectedCategory] = useState('all')
+	const [availableMaxPrice, setAvailableMaxPrice] = useState(0)
+	const [maxPrice, setMaxPrice] = useState(0)
+	const [sort, setSort] = useState('relevance')
+	const [searchParams] = useSearchParams()
+	const searchTerm = (searchParams.get('q') || '').trim().toLocaleLowerCase('es-AR')
+	const gender = searchParams.get('genero')
+	const offersOnly = searchParams.get('ofertas') === '1'
 
 	useEffect(() => {
-		const fetchProducts = async () => {
+		let isCurrent = true
+		const fetchCatalog = async () => {
 			try {
-				const response = await fetch('http://localhost:8080/api/productos', {
-					method: 'GET',
-					headers: { Accept: 'application/json' },
-					// Petición CORS: el front (5173) y el back (8080) están en distintos puertos
-					mode: 'cors',
-				})
-
-				if (!response.ok) {
-					throw new Error('Error al cargar los productos')
+				const [productData, categoryData] = await Promise.all([
+					apiRequest('/productos'),
+					apiRequest('/categorias'),
+				])
+				if (isCurrent) {
+					setProducts(productData)
+					setCategories(categoryData)
+					const highestPrice = Math.max(
+						0,
+						...productData.map((product) => Number(product.precio) || 0),
+					)
+					setAvailableMaxPrice(highestPrice)
+					setMaxPrice(highestPrice)
 				}
-
-				const data = await response.json()
-				setProducts(data)
 			} catch (err) {
-				setError(err.message)
+				if (isCurrent) setError(err.message)
 			} finally {
-				setLoading(false)
+				if (isCurrent) setLoading(false)
 			}
 		}
 
-		fetchProducts()
-		// Array de dependencias vacío: se ejecuta una sola vez al montar el componente
+		fetchCatalog()
+		return () => {
+			isCurrent = false
+		}
 	}, [])
 
-	// --- Manejo de estados de carga y error ---
-	if (loading) return <p className="catalog__message">Cargando productos...</p>
-	if (error) return <p className="catalog__message">Error: {error}</p>
+	const filteredProducts = products
+		.filter((product) => selectedCategory === 'all' || String(product.categoriaId) === selectedCategory)
+		.filter((product) => !gender || product.genero?.toLocaleLowerCase('es-AR') === gender.toLocaleLowerCase('es-AR'))
+		.filter((product) => !searchTerm || `${product.nombre} ${product.marca} ${product.categoriaNombre}`.toLocaleLowerCase('es-AR').includes(searchTerm))
+		.filter((product) => !offersOnly || Number(product.precioOriginal) > Number(product.precio))
+		.filter((product) => Number(product.precio) <= maxPrice)
+		.sort((first, second) => {
+			if (sort === 'price-asc') return first.precio - second.precio
+			if (sort === 'price-desc') return second.precio - first.precio
+			return 0
+		})
+
+	if (loading) return <main className="store-page"><p className="muted">Cargando productos...</p></main>
+	if (error) return <main className="store-page"><p className="page-error" role="alert">No se pudo cargar el catálogo: {error}</p></main>
 
 	return (
-		<main className="catalog">
-			<header className="catalog__header">
-				<h1>Catálogo de productos</h1>
-				<p className="catalog__count">{products.length} productos</p>
+		<main className="store-page">
+			<div className="breadcrumbs">
+				<Link to="/">Inicio</Link><span>/</span><span>Zapatillas</span>
+			</div>
+			<header className="page-heading">
+				<h1>{offersOnly ? 'Ofertas' : 'Zapatillas'}</h1>
+				<p>{filteredProducts.length} productos</p>
 			</header>
 
-			{products.length === 0 ? (
-				<p className="catalog__message">No hay productos disponibles.</p>
-			) : (
-				<section className="product-grid" aria-label="Lista de productos">
-					{products.map((product) => (
-						<ProductCard key={product.id} product={product} />
-					))}
-				</section>
-			)}
+			<div className="catalog-toolbar">
+				{gender && <p className="muted">Para {gender.toLocaleLowerCase('es-AR')}</p>}
+				<label>
+					Ordenar:
+					<select value={sort} onChange={(event) => setSort(event.target.value)}>
+						<option value="relevance">Relevancia</option>
+						<option value="price-asc">Menor precio</option>
+						<option value="price-desc">Mayor precio</option>
+					</select>
+				</label>
+			</div>
+
+			<div className="store-catalog">
+				<aside className="catalog-filters" aria-label="Filtros de productos">
+					<section className="catalog-filter">
+						<h2>Categoría</h2>
+						<label>
+							<input
+								type="checkbox"
+								checked={selectedCategory === 'all'}
+								onChange={() => setSelectedCategory('all')}
+							/>
+							Todas
+						</label>
+						{categories
+							.filter((category) => category.nombre?.toLocaleLowerCase('es-AR') !== 'niños')
+							.map((category) => (
+								<label key={category.id}>
+									<input
+										type="checkbox"
+										checked={selectedCategory === String(category.id)}
+										onChange={() =>
+											setSelectedCategory(
+												selectedCategory === String(category.id)
+													? 'all'
+													: String(category.id),
+											)
+										}
+									/>
+									{category.nombre}
+								</label>
+							))}
+					</section>
+					<section className="catalog-filter">
+						<h2>Precio máximo</h2>
+						<input
+							type="range"
+							min="0"
+							max={Math.max(availableMaxPrice, 1)}
+							step="1"
+							value={maxPrice}
+							onChange={(event) => setMaxPrice(Number(event.target.value))}
+							aria-label="Precio máximo"
+						/>
+						<div className="price-range">
+							<span>$ 0</span>
+							<span>
+								{new Intl.NumberFormat('es-AR', {
+									style: 'currency',
+									currency: 'ARS',
+									maximumFractionDigits: 0,
+								}).format(maxPrice)}
+							</span>
+						</div>
+					</section>
+				</aside>
+
+				{filteredProducts.length ? (
+					<section className="product-grid" aria-label="Lista de productos">
+						{filteredProducts.map((product) => (
+							<ProductCard key={product.id} product={product} />
+						))}
+					</section>
+				) : (
+					<div className="empty-state">
+						<h2>No encontramos zapatillas</h2>
+						<p>Probá con otra búsqueda o ajustá los filtros.</p>
+						<button
+							type="button"
+							className="secondary-button"
+							onClick={() => {
+								setSelectedCategory('all')
+								setMaxPrice(availableMaxPrice)
+							}}
+						>
+							Limpiar filtros
+						</button>
+					</div>
+				)}
+			</div>
 		</main>
 	)
 }

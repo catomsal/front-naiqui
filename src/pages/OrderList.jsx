@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/useAuth.js'
+import { apiRequest } from '../app/api.js'
+import { formatPrice } from '../app/format.js'
 
 function OrderList() {
 	const { user } = useAuth()
@@ -9,58 +11,53 @@ function OrderList() {
 	const [error, setError] = useState(null)
 
 	useEffect(() => {
-		const fetchPedidos = async () => {
-			try {
-				const response = await fetch('http://localhost:8080/api/pedidos', {
-					method: 'GET',
-					headers: {
-						Accept: 'application/json',
-						// Envía el token JWT guardado en el login (ruta protegida)
-						Authorization: `Bearer ${localStorage.getItem('token')}`,
-					},
-					mode: 'cors',
-				})
-
-				if (!response.ok) {
-					throw new Error('Error al cargar los pedidos')
-				}
-
-				const data = await response.json()
-				// Nos quedamos solo con los pedidos del usuario logueado
-				setPedidos(data.filter((pedido) => pedido.usuarioId === user.id))
-			} catch (err) {
-				setError(err.message)
-			} finally {
-				setLoading(false)
-			}
+		let isCurrent = true
+		apiRequest(`/usuarios/${user.id}/pedidos`)
+			.then((data) => {
+				if (isCurrent) setPedidos(data)
+			})
+			.catch((err) => {
+				if (isCurrent) setError(err.message)
+			})
+			.finally(() => {
+				if (isCurrent) setLoading(false)
+			})
+		return () => {
+			isCurrent = false
 		}
-
-		fetchPedidos()
-		// Dependencia [user.id]: vuelve a buscar si cambia el usuario logueado
 	}, [user.id])
 
-	if (loading) return <p className="catalog__message">Cargando pedidos...</p>
-	if (error) return <p className="catalog__message">Error: {error}</p>
+	if (loading) return <main className="store-page"><p className="muted">Cargando pedidos...</p></main>
+	if (error) return <main className="store-page"><p className="page-error" role="alert">{error}</p></main>
 
 	return (
-		<main className="catalog">
-			<header className="catalog__header">
-				<p className="catalog__eyebrow">Pedidos</p>
+		<main className="store-page">
+			<header className="page-heading">
 				<h1>Mis pedidos</h1>
-				<p className="catalog__count">{pedidos.length} pedidos</p>
+				<p>{pedidos.length} pedidos</p>
 			</header>
 			{pedidos.length === 0 ? (
-				<p className="catalog__message">Todavía no tenés pedidos.</p>
+				<div className="empty-state">
+					<h2>Todavía no tenés pedidos</h2>
+					<p>Cuando completes una compra, vas a poder seguirla desde acá.</p>
+					<Link className="primary-button" to="/">Ver catálogo</Link>
+				</div>
 			) : (
-				<ul>
+				<div className="order-list">
 					{pedidos.map((pedido) => (
-						<li key={pedido.id}>
-							<Link to={`/pedido/${pedido.id}`}>
-								Pedido #{pedido.id} - {pedido.estado} - ${pedido.total}
-							</Link>
-						</li>
+						<article className="summary-card" key={pedido.id}>
+							<div className="order-list__row">
+								<strong>Pedido #{pedido.id}</strong>
+								<span>{pedido.estado}</span>
+							</div>
+							<div className="order-list__row">
+								<span>{pedido.items.length} productos</span>
+								<strong>{formatPrice(pedido.total)}</strong>
+							</div>
+							<Link className="text-link" to={`/pedido/${pedido.id}`}>Ver pedido</Link>
+						</article>
 					))}
-				</ul>
+				</div>
 			)}
 		</main>
 	)

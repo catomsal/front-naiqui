@@ -1,25 +1,33 @@
 import { useDispatch, useSelector } from 'react-redux'
-import { toggleFavorite } from '../store/slices/favoriteSlice'
+import { toggleFavorite, toggleFavoriteOnServer } from '../store/slices/favoriteSlice.js'
+import { useAuth } from '../context/useAuth.js'
 
 function FavoriteButton({ product }) {
   const dispatch = useDispatch()
-  // Lee los favoritos desde el store global de Redux (favoriteSlice)
+  const { user } = useAuth()
   const favoriteItems = useSelector((state) => state.favorite.items)
+  const favoriteLoading = useSelector((state) => state.favorite.loading)
   const isFav = favoriteItems.some((item) => item.id === product?.id)
 
   function handleToggle() {
     if (!product) return
-    // Dispara la acción toggleFavorite sincrónica del slice del profesor
+    if (user?.id) {
+      dispatch(toggleFavoriteOnServer({ userId: user.id, product, isFavorite: isFav }))
+      return
+    }
     dispatch(toggleFavorite(product))
   }
 
   return (
     <button
+      className={`favorite-button${isFav ? ' favorite-button--active' : ''}`}
       type="button"
       onClick={handleToggle}
       aria-label={isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+      aria-pressed={isFav}
+      disabled={Boolean(user?.id && favoriteLoading)}
     >
-      {isFav ? '★ Quitar de favoritos' : '☆ Agregar a favoritos'}
+      {isFav ? '♥' : '♡'}
     </button>
   )
 }
