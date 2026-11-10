@@ -5,7 +5,10 @@ import { useAuth } from '../context/useAuth.js'
 
 function Register() {
 	const [fields, setFields] = useState({
+		username: '',
 		nombre: '',
+		apellido: '',
+		rol: 'USUARIO',
 		email: '',
 		password: '',
 		confirmPassword: '',
@@ -35,7 +38,10 @@ function Register() {
 		setIsLoading(true)
 		try {
 			const credentials = {
+				username: fields.username.trim(),
 				nombre: fields.nombre.trim(),
+				apellido: fields.apellido.trim(),
+				rol: fields.rol,
 				email: fields.email.trim(),
 				password: fields.password,
 			}
@@ -73,6 +79,22 @@ function Register() {
 			</div>
 			{error && <p className="page-error" role="alert">{error}</p>}
 			<form onSubmit={handleSubmit}>
+				<label htmlFor="rol">
+					¿Qué querés hacer en Naiqui?
+					<select
+						id="rol"
+						name="rol"
+						value={fields.rol}
+						onChange={handleChange}
+						disabled={isLoading}
+					>
+						<option value="USUARIO">Comprar productos</option>
+						<option value="VENDEDOR">Vender y publicar productos</option>
+					</select>
+				</label>
+				<p className="muted">
+					Si elegís vender, vas a poder publicar productos al crear tu cuenta.
+				</p>
 				<label htmlFor="nombre">
 					Nombre
 					<input
@@ -83,6 +105,36 @@ function Register() {
 						value={fields.nombre}
 						onChange={handleChange}
 						placeholder="Tu nombre"
+						required
+						disabled={isLoading}
+					/>
+				</label>
+				<label htmlFor="apellido">
+					Apellido
+					<input
+						type="text"
+						id="apellido"
+						name="apellido"
+						autoComplete="family-name"
+						value={fields.apellido}
+						onChange={handleChange}
+						placeholder="Tu apellido"
+						required
+						disabled={isLoading}
+					/>
+				</label>
+				<label htmlFor="username">
+					Nombre de usuario
+					<input
+						type="text"
+						id="username"
+						name="username"
+						autoComplete="username"
+						minLength={3}
+						maxLength={40}
+						value={fields.username}
+						onChange={handleChange}
+						placeholder="tu_usuario"
 						required
 						disabled={isLoading}
 					/>

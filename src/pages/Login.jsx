@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/useAuth.js'
-import { apiRequest } from '../app/api.js'
+import { useDispatch } from 'react-redux'
+import { clearError, loginUser } from '../store/slices/authSlice.js'
 
 const demoAccounts = import.meta.env.DEV
 	? [
@@ -15,7 +15,7 @@ function Login() {
 	const [credentials, setCredentials] = useState({ email: '', password: '' })
 	const [error, setError] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
-	const { login } = useAuth()
+	const dispatch = useDispatch()
 	const navigate = useNavigate()
 	const location = useLocation()
 
@@ -29,16 +29,13 @@ function Login() {
 	async function signIn(nextCredentials) {
 		setError('')
 		setIsLoading(true)
+		dispatch(clearError())
 
 		try {
-			const data = await apiRequest('/login', {
-				method: 'POST',
-				body: JSON.stringify(nextCredentials),
-			})
-			login(data)
+			await dispatch(loginUser(nextCredentials)).unwrap()
 			navigate(location.state?.from?.pathname || '/', { replace: true })
 		} catch (err) {
-			setError(err.message || 'No se pudo iniciar sesión')
+			setError(err || 'No se pudo iniciar sesión')
 		} finally {
 			setIsLoading(false)
 		}

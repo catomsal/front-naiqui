@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { useDispatch } from 'react-redux'
 import { Route, Routes } from 'react-router-dom'
 import Navbar from './components/Navbar.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
@@ -17,9 +19,16 @@ import Profile from './pages/Profile.jsx'
 import Favorites from './pages/Favorites.jsx'
 import Checkout from './pages/Checkout.jsx'
 import UserManagement from './pages/UserManagement.jsx'
+import { restoreSession } from './store/slices/authSlice.js'
 import './App.css'
 
 function App() {
+	const dispatch = useDispatch()
+
+	useEffect(() => {
+		dispatch(restoreSession())
+	}, [dispatch])
+
 	return (
 		<>
 			<Navbar />
@@ -39,7 +48,6 @@ function App() {
 				/>
 				<Route path="/categoria/:id" element={<CategoryProducts />} />
 				<Route path="/login" element={<Login />} />
-				<Route path="/login-context" element={<Login />} />
 				<Route path="/registro" element={<Register />} />
 				<Route
 					path="/favoritos"

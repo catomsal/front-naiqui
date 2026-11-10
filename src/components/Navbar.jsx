@@ -16,6 +16,7 @@ function Navbar() {
 	const favorites = favoritesState?.items || []
 	const cartItems = useSelector((state) => state.cart?.items || [])
 	const cartError = useSelector((state) => state.cart?.error)
+	const authError = useSelector((state) => state.auth?.error)
 	const cartCount = cartItems.reduce((total, item) => total + (item.cantidad || 1), 0)
 
 	useEffect(() => {
@@ -111,7 +112,7 @@ function Navbar() {
 				{user ? (
 					<>
 						<NavLink to="/perfil" className="navbar__account">
-							{user.nombre}
+							{user.username || user.nombre}
 						</NavLink>
 						<button className="navbar__logout" onClick={handleLogout} type="button">
 							Salir
@@ -126,8 +127,8 @@ function Navbar() {
 					</NavLink>
 				)}
 			</div>
-			{(cartError || favoritesState.error) && (
-				<p className="navbar__error" role="alert">{cartError || favoritesState.error}</p>
+			{(authError || cartError || favoritesState.error) && (
+				<p className="navbar__error" role="alert">{authError || cartError || favoritesState.error}</p>
 			)}
 		</nav>
 	)

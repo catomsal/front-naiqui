@@ -5,6 +5,7 @@ import ProductImage from '../components/ProductImage.jsx'
 import { formatPrice } from '../app/format.js'
 import {
 	addToCart,
+	clearCart,
 	fetchCartItems,
 	removeCartItem,
 	updateCartItem,
@@ -49,6 +50,11 @@ function Cart() {
 		)
 	}
 
+	async function emptyCart() {
+		if (!window.confirm('¿Querés quitar todos los productos del carrito?')) return
+		await dispatch(clearCart(user.id))
+	}
+
 	if (loading && !initialized) {
 		return <main className="store-page"><p className="muted">Cargando tu carrito...</p></main>
 	}
@@ -69,6 +75,11 @@ function Cart() {
 			<header className="page-heading">
 				<h1>Mi carrito</h1>
 				<p>{items.reduce((count, item) => count + item.cantidad, 0)} productos</p>
+				{items.length > 0 && (
+					<button className="text-link" type="button" onClick={emptyCart} disabled={loading}>
+						Vaciar carrito
+					</button>
+				)}
 			</header>
 
 			{error && (

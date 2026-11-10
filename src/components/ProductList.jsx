@@ -12,7 +12,7 @@ function ProductList() {
 	const [selectedCategory, setSelectedCategory] = useState('all')
 	const [availableMaxPrice, setAvailableMaxPrice] = useState(0)
 	const [maxPrice, setMaxPrice] = useState(0)
-	const [sort, setSort] = useState('relevance')
+	const [sort, setSort] = useState('name-asc')
 	const [searchParams] = useSearchParams()
 	const searchTerm = (searchParams.get('q') || '').trim().toLocaleLowerCase('es-AR')
 	const gender = searchParams.get('genero')
@@ -56,6 +56,7 @@ function ProductList() {
 		.filter((product) => !offersOnly || Number(product.precioOriginal) > Number(product.precio))
 		.filter((product) => Number(product.precio) <= maxPrice)
 		.sort((first, second) => {
+			if (sort === 'name-asc') return first.nombre.localeCompare(second.nombre, 'es-AR')
 			if (sort === 'price-asc') return first.precio - second.precio
 			if (sort === 'price-desc') return second.precio - first.precio
 			return 0
@@ -79,6 +80,7 @@ function ProductList() {
 				<label>
 					Ordenar:
 					<select value={sort} onChange={(event) => setSort(event.target.value)}>
+						<option value="name-asc">Nombre (A-Z)</option>
 						<option value="relevance">Relevancia</option>
 						<option value="price-asc">Menor precio</option>
 						<option value="price-desc">Mayor precio</option>
@@ -98,9 +100,7 @@ function ProductList() {
 							/>
 							Todas
 						</label>
-						{categories
-							.filter((category) => category.nombre?.toLocaleLowerCase('es-AR') !== 'niños')
-							.map((category) => (
+						{categories.map((category) => (
 								<label key={category.id}>
 									<input
 										type="checkbox"
@@ -115,7 +115,7 @@ function ProductList() {
 									/>
 									{category.nombre}
 								</label>
-							))}
+						))}
 					</section>
 					<section className="catalog-filter">
 						<h2>Precio máximo</h2>

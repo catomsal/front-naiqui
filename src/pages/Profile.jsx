@@ -23,6 +23,14 @@ function Profile() {
 						<strong>{user.nombre || 'Sin nombre'}</strong>
 					</div>
 					<div className="profile-card__detail">
+						<span>Apellido</span>
+						<strong>{user.apellido || 'No informado'}</strong>
+					</div>
+					<div className="profile-card__detail">
+						<span>Nombre de usuario</span>
+						<strong>{user.username || 'No informado'}</strong>
+					</div>
+					<div className="profile-card__detail">
 						<span>Correo electrónico</span>
 						<strong>{user.email || 'No informado'}</strong>
 					</div>

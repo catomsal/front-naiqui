@@ -1,4 +1,5 @@
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+const API_ORIGIN = new URL(API_URL).origin
 
 let csrfTokenRequest = null
 
@@ -33,7 +34,7 @@ export async function apiRequest(path, options = {}) {
 		credentials: 'include',
 		headers: {
 			Accept: 'application/json',
-			...(options.body ? { 'Content-Type': 'application/json' } : {}),
+			...(options.body && !(options.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}),
 			...(token ? { 'X-XSRF-TOKEN': token } : {}),
 			...options.headers,
 		},
@@ -57,4 +58,9 @@ export async function apiRequest(path, options = {}) {
 	}
 
 	return data
+}
+
+export function resolveAssetUrl(url) {
+	if (!url || !url.startsWith('/')) return url
+	return `${API_ORIGIN}${url}`
 }

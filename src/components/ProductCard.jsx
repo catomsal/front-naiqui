@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import FavoriteButton from './FavoriteButton.jsx'
-import ShoePlaceholder from './ShoePlaceholder.jsx'
+import ProductImage from './ProductImage.jsx'
 
 function ProductCard({ product }) {
 	const hasDiscount = Number(product.precioOriginal) > Number(product.precio)
@@ -23,17 +23,11 @@ function ProductCard({ product }) {
 		<article className="product-card">
 			<FavoriteButton product={product} />
 			<Link className="product-card__image-wrap" to={`/producto/${product.id}`}>
-				{product.imagenUrl ? (
-					<img
-						className="product-card__image"
-						src={product.imagenUrl}
-						alt={product.nombre}
-					/>
-				) : (
-					<span className="product-card__placeholder" aria-hidden="true">
-						<ShoePlaceholder />
-					</span>
-				)}
+				<ProductImage
+					className={product.imagenUrl ? 'product-card__image' : 'product-card__placeholder'}
+					src={product.imagenUrl}
+					alt={product.nombre}
+				/>
 				{hasDiscount && <span className="product-card__discount">{discount}% OFF</span>}
 				<span className="product-card__category">{categoryText}</span>
 			</Link>
@@ -43,6 +37,7 @@ function ProductCard({ product }) {
 					<Link to={`/producto/${product.id}`}>{product.nombre}</Link>
 				</h2>
 				<p className="product-card__description">{product.descripcion}</p>
+				<p className="product-card__creator">Publicado por {product.creadorNombre || 'Equipo Naiqui'}</p>
 				<div className="product-card__price-group">
 					{hasDiscount && (
 						<del className="product-card__old-price">

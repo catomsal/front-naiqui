@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import FavoriteButton from '../components/FavoriteButton.jsx'
-import ShoePlaceholder from '../components/ShoePlaceholder.jsx'
+import ProductImage from '../components/ProductImage.jsx'
 import { apiRequest } from '../app/api.js'
 import { formatPrice } from '../app/format.js'
 import { addToCart } from '../store/slices/cartSlice.js'
@@ -39,12 +39,16 @@ function ProductDetail() {
 	const [sizeChoice, setSizeChoice] = useState({ productId: null, size: null })
 	const [actionError, setActionError] = useState('')
 	const [added, setAdded] = useState(false)
+	const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
 	useEffect(() => {
 		let isCurrent = true
 		apiRequest(`/productos/${id}`)
 			.then((data) => {
-				if (isCurrent) setProductState({ id, product: data, error: null })
+				if (isCurrent) {
+					setProductState({ id, product: data, error: null })
+					setSelectedImageIndex(0)
+				}
 			})
 			.catch((err) => {
 				if (isCurrent) setProductState({ id, product: null, error: err.message })
@@ -62,6 +66,12 @@ function ProductDetail() {
 		? Math.round((1 - Number(product.precio) / Number(product.precioOriginal)) * 100)
 		: 0
 	const categoryLabel = product?.categoriaNombre || 'Zapatillas'
+	const productImages = product?.imagenes?.length
+		? product.imagenes
+		: product?.imagenUrl
+			? [product.imagenUrl]
+			: []
+	const selectedImage = productImages[selectedImageIndex] || productImages[0]
 	const variants = product?.variantes || []
 	const colors = [...new Set(variants.map((variant) => variant.color).filter(Boolean))]
 	const defaultColor = variants.some((variant) => variant.color === product?.color)
@@ -160,12 +170,28 @@ function ProductDetail() {
 			<div className="product-detail">
 				<div className="product-gallery">
 					<div className="product-gallery__main">
-						{product.imagenUrl ? (
-							<img src={product.imagenUrl} alt={product.nombre} />
-						) : (
-							<ShoePlaceholder />
-						)}
+						<ProductImage
+							className="product-gallery__image"
+							src={selectedImage}
+							alt={product.nombre}
+						/>
 					</div>
+					{productImages.length > 1 && (
+						<div className="product-gallery__thumbs" aria-label="Otras imágenes del producto">
+							{productImages.map((image, index) => (
+								<button
+									className={`product-gallery__thumb${index === selectedImageIndex ? ' product-gallery__thumb--selected' : ''}`}
+									type="button"
+									key={`${image}-${index}`}
+									aria-label={`Ver imagen ${index + 1}`}
+									aria-pressed={index === selectedImageIndex}
+									onClick={() => setSelectedImageIndex(index)}
+								>
+									<ProductImage className="product-gallery__thumb-image" src={image} alt="" />
+								</button>
+							))}
+						</div>
+					)}
 				</div>
 
 				<section className="product-info">
@@ -186,6 +212,7 @@ function ProductDetail() {
 						{!isStaff && <FavoriteButton product={product} />}
 					</div>
 					<p className="product-info__description">{product.descripcion}</p>
+					<p className="product-info__creator">Publicado por {product.creadorNombre || 'Equipo Naiqui'}</p>
 
 					<div className="product-option">
 						<div className="product-option__heading">Color</div>

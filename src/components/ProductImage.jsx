@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { resolveAssetUrl } from '../app/api.js'
 import ShoePlaceholder from './ShoePlaceholder.jsx'
 
 function ProductImage({ src, alt, className }) {
@@ -11,7 +12,7 @@ function ProductImage({ src, alt, className }) {
 	return (
 		<img
 			className={className}
-			src={src}
+			src={resolveAssetUrl(src)}
 			alt={alt}
 			onError={() => setFailedSource(src)}
 		/>

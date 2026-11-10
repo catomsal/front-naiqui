@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { apiRequest } from '../app/api.js'
+import ProductImage from '../components/ProductImage.jsx'
+import { useAuth } from '../context/useAuth.js'
 
 const sizes = [38, 39, 40, 41, 42, 43]
 
@@ -33,7 +35,9 @@ function createDraft(product) {
 		descripcion: product.descripcion || '',
 		precioRegular: String(product.precioOriginal ?? product.precio ?? ''),
 		descuento: String(discount),
-		imagenUrl: product.imagenUrl || '',
+		imagenUrls: (product.imagenes?.length ? product.imagenes : [product.imagenUrl])
+			.filter(Boolean)
+			.join('\n'),
 		categoriaId: String(product.categoriaId || ''),
 		variantes: [...variantsByColor].map(([color, stockPorTalle]) => ({ color, stockPorTalle })),
 		nuevoColor: '',
@@ -50,11 +54,14 @@ function createEmptyProduct() {
 		descuento: '0',
 		variantes: [{ color: 'Negro', stockPorTalle: Object.fromEntries(sizes.map((size) => [size, '0'])) }],
 		imagenUrl: '',
+		imagenFiles: [],
 		categoriaId: '',
 	}
 }
 
 function ProductManagement() {
+	const { user } = useAuth()
+	const isAdmin = user?.rol?.toUpperCase() === 'ADMIN'
 	const [products, setProducts] = useState([])
 	const [categories, setCategories] = useState([])
 	const [drafts, setDrafts] = useState({})
@@ -65,6 +72,12 @@ function ProductManagement() {
 	const [creatingProduct, setCreatingProduct] = useState(false)
 	const [error, setError] = useState('')
 	const [notice, setNotice] = useState('')
+	const [newImageFiles, setNewImageFiles] = useState([])
+	const [imageFiles, setImageFiles] = useState({})
+	const [deletingProductId, setDeletingProductId] = useState(null)
+	const visibleProducts = isAdmin
+		? products
+		: products.filter((product) => product.creadorId === user?.id)
 
 	useEffect(() => {
 		let isCurrent = true
@@ -93,6 +106,21 @@ function ProductManagement() {
 		setNotice('')
 	}
 
+	async function uploadImages(files) {
+		const uploadedUrls = []
+		for (const file of files) {
+			const body = new FormData()
+			body.append('imagen', file)
+			const result = await apiRequest('/productos/imagenes', { method: 'POST', body })
+			uploadedUrls.push(result.url)
+		}
+		return uploadedUrls
+	}
+
+	function parseImageUrls(value) {
+		return value.split(/\r?\n/).map((url) => url.trim()).filter(Boolean)
+	}
+
 	function updateDraft(productId, field, value) {
 		setDrafts((current) => ({
 			...current,
@@ -102,6 +130,11 @@ function ProductManagement() {
 
 	function cancelEditing(productId) {
 		setDrafts((current) => {
+			const next = { ...current }
+			delete next[productId]
+			return next
+		})
+		setImageFiles((current) => {
 			const next = { ...current }
 			delete next[productId]
 			return next
@@ -213,7 +246,8 @@ function ProductManagement() {
 			stock: variantes.reduce((total, variant) => total + variant.stock, 0),
 			color: newProduct.variantes[0].color,
 			variantes,
-			imagenUrl: newProduct.imagenUrl.trim(),
+			imagenUrl: '',
+			imagenes: [],
 			categoriaId: Number(newProduct.categoriaId),
 		}
 
@@ -226,12 +260,19 @@ function ProductManagement() {
 		setError('')
 		setNotice('')
 		try {
+			const imageUrls = [
+				...parseImageUrls(newProduct.imagenUrl),
+				...await uploadImages(newImageFiles),
+			]
+			payload.imagenes = imageUrls
+			payload.imagenUrl = imageUrls[0] || ''
 			const createdProduct = await apiRequest('/productos', {
 				method: 'POST',
 				body: JSON.stringify(payload),
 			})
 			setProducts((current) => [createdProduct, ...current])
 			setNewProduct(null)
+			setNewImageFiles([])
 			setNotice(`Se creó el producto "${createdProduct.nombre}".`)
 		} catch (err) {
 			setError(err.message || 'No se pudo crear el producto.')
@@ -287,7 +328,8 @@ function ProductManagement() {
 			color: draft.variantes[0].color.trim(),
 			stock: variantes.reduce((total, variant) => total + variant.stock, 0),
 			variantes,
-			imagenUrl: draft.imagenUrl.trim(),
+			imagenUrl: '',
+			imagenes: [],
 			categoriaId: Number(draft.categoriaId),
 		}
 
@@ -300,6 +342,12 @@ function ProductManagement() {
 		setError('')
 		setNotice('')
 		try {
+			const imageUrls = [
+				...parseImageUrls(draft.imagenUrls),
+				...await uploadImages(imageFiles[product.id] || []),
+			]
+			payload.imagenes = imageUrls
+			payload.imagenUrl = imageUrls[0] || ''
 			const updatedProduct = await apiRequest(`/productos/${product.id}`, {
 				method: 'PUT',
 				body: JSON.stringify(payload),
@@ -308,11 +356,32 @@ function ProductManagement() {
 				item.id === updatedProduct.id ? updatedProduct : item
 			)))
 			cancelEditing(product.id)
+			setImageFiles((current) => {
+				const next = { ...current }
+				delete next[product.id]
+				return next
+			})
 			setNotice(`Se guardaron los cambios de "${updatedProduct.nombre}".`)
 		} catch (err) {
 			setError(err.message || 'No se pudo guardar el producto.')
 		} finally {
 			setSavingProductId(null)
+		}
+	}
+
+	async function deleteProduct(product) {
+		if (!window.confirm(`¿Querés eliminar "${product.nombre}"? Esta acción no se puede deshacer.`)) return
+		setDeletingProductId(product.id)
+		setError('')
+		setNotice('')
+		try {
+			await apiRequest(`/productos/${product.id}`, { method: 'DELETE' })
+			setProducts((current) => current.filter((item) => item.id !== product.id))
+			setNotice(`Se eliminó "${product.nombre}".`)
+		} catch (err) {
+			setError(err.message || 'No se pudo eliminar el producto.')
+		} finally {
+			setDeletingProductId(null)
 		}
 	}
 
@@ -326,7 +395,7 @@ function ProductManagement() {
 			<header className="product-management-heading">
 				<div className="page-heading">
 					<h1>Administrar productos</h1>
-					<p>{products.length} productos</p>
+					<p>{visibleProducts.length} productos</p>
 				</div>
 				<button
 					className="primary-button"
@@ -334,6 +403,7 @@ function ProductManagement() {
 					aria-expanded={Boolean(newProduct)}
 					onClick={() => {
 						setNewProduct((current) => current ? null : createEmptyProduct())
+						setNewImageFiles([])
 						setNewColor('')
 						setError('')
 						setNotice('')
@@ -452,12 +522,25 @@ function ProductManagement() {
 							</div>
 						</fieldset>
 						<label className="product-editor__wide">
-							URL de imagen
-							<input
-								type="url"
+							URLs de imágenes (una por línea)
+							<textarea
+								rows="3"
 								value={newProduct.imagenUrl}
 								onChange={(event) => updateNewProduct('imagenUrl', event.target.value)}
+								placeholder="https://ejemplo.com/zapatilla.jpg"
 							/>
+						</label>
+						<label className="product-editor__wide">
+							Subir imágenes
+							<input
+								type="file"
+								accept="image/png,image/jpeg"
+								multiple
+								onChange={(event) => setNewImageFiles(Array.from(event.target.files || []))}
+							/>
+							<span className="product-editor__hint">
+								{newImageFiles.length ? `${newImageFiles.length} archivo(s) seleccionado(s)` : 'PNG o JPG, hasta 5 MB por imagen.'}
+							</span>
 						</label>
 						<label className="product-editor__wide">
 							Descripción
@@ -475,7 +558,10 @@ function ProductManagement() {
 								className="secondary-button"
 								type="button"
 								disabled={creatingProduct}
-								onClick={() => setNewProduct(null)}
+								onClick={() => {
+									setNewProduct(null)
+									setNewImageFiles([])
+								}}
 							>
 								Cancelar
 							</button>
@@ -484,20 +570,22 @@ function ProductManagement() {
 				</section>
 			)}
 			<section className="product-management-list" aria-label="Productos">
-				{products.map((product) => {
+				{visibleProducts.map((product) => {
 					const draft = drafts[product.id]
 					const hasDiscount = Number(product.precioOriginal) > Number(product.precio)
+					const canManage = isAdmin || product.creadorId === user?.id
 					return (
 						<article className="product-management-card" key={product.id}>
 							<div className="product-management-card__summary">
-								{product.imagenUrl ? (
-									<img src={product.imagenUrl} alt="" />
-								) : (
-									<div className="product-management-card__placeholder" aria-hidden="true">Sin imagen</div>
-								)}
+								<ProductImage
+									className="product-management-card__image"
+									src={product.imagenUrl}
+									alt=""
+								/>
 								<div>
 									<strong>{product.nombre}</strong>
 									<span>{product.marca} · {product.categoriaNombre}</span>
+									<span>Creado por: {product.creadorNombre || 'Administrador'}</span>
 									<span>
 										{hasDiscount ? (
 											<>
@@ -509,14 +597,28 @@ function ProductManagement() {
 										)}
 									</span>
 								</div>
-								<button
-									className="secondary-button"
-									type="button"
-									aria-expanded={Boolean(draft)}
-									onClick={() => draft ? cancelEditing(product.id) : startEditing(product)}
-								>
-									{draft ? 'Cerrar' : 'Editar'}
-								</button>
+								<div className="product-management-card__actions">
+									{canManage && (
+										<>
+											<button
+												className="secondary-button"
+												type="button"
+												aria-expanded={Boolean(draft)}
+												onClick={() => draft ? cancelEditing(product.id) : startEditing(product)}
+											>
+												{draft ? 'Cerrar' : 'Editar'}
+											</button>
+											<button
+												className="danger-button"
+												type="button"
+												disabled={deletingProductId === product.id}
+												onClick={() => deleteProduct(product)}
+											>
+												{deletingProductId === product.id ? 'Eliminando...' : 'Eliminar'}
+											</button>
+										</>
+									)}
+								</div>
 							</div>
 							{draft && (
 								<form className="product-editor" onSubmit={(event) => saveProduct(event, product)}>
@@ -580,12 +682,29 @@ function ProductManagement() {
 										<span className="product-editor__hint">Poné 0 para quitar el descuento.</span>
 									</label>
 									<label className="product-editor__wide">
-										URL de imagen
-										<input
-											type="url"
-											value={draft.imagenUrl}
-											onChange={(event) => updateDraft(product.id, 'imagenUrl', event.target.value)}
+										URLs de imágenes (una por línea)
+										<textarea
+											rows="3"
+											value={draft.imagenUrls}
+											onChange={(event) => updateDraft(product.id, 'imagenUrls', event.target.value)}
 										/>
+									</label>
+									<label className="product-editor__wide">
+										Subir imágenes
+										<input
+											type="file"
+											accept="image/png,image/jpeg"
+											multiple
+											onChange={(event) => setImageFiles((current) => ({
+												...current,
+												[product.id]: Array.from(event.target.files || []),
+											}))}
+										/>
+										<span className="product-editor__hint">
+											{imageFiles[product.id]?.length
+												? `${imageFiles[product.id].length} archivo(s) seleccionado(s)`
+												: 'PNG o JPG, hasta 5 MB por imagen.'}
+										</span>
 									</label>
 									<label className="product-editor__wide">
 										Descripción
