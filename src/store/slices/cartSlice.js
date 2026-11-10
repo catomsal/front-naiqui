@@ -25,11 +25,11 @@ export const fetchCartItems = createAsyncThunk(
 
 export const addToCart = createAsyncThunk(
 	'cart/addToCart',
-	async ({ userId, productoId, talle, cantidad = 1 }, { rejectWithValue }) => {
+	async ({ userId, productoId, talle, color, cantidad = 1 }, { rejectWithValue }) => {
 		try {
 			const data = await apiRequest(`/usuarios/${userId}/carrito/items`, {
 				method: 'POST',
-				body: JSON.stringify({ productoId, talle, cantidad }),
+				body: JSON.stringify({ productoId, talle, color, cantidad }),
 			})
 			return getCartItems(data)
 		} catch (error) {

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import ShoePlaceholder from '../components/ShoePlaceholder.jsx'
+import ProductImage from '../components/ProductImage.jsx'
 import { formatPrice } from '../app/format.js'
 import {
 	addToCart,
@@ -32,6 +32,7 @@ function Cart() {
 				userId: user.id,
 				productoId: item.productoId,
 				talle: item.talle,
+				color: item.color,
 				cantidad: 1,
 			}),
 		)
@@ -91,13 +92,17 @@ function Cart() {
 						{items.map((item) => (
 							<article className="cart-item" key={item.id}>
 								<Link className="cart-item__image" to={`/producto/${item.productoId}`} aria-label={item.productoNombre}>
-									<ShoePlaceholder />
+									<ProductImage
+										className="cart-item__product-image"
+										src={item.imagenUrl}
+										alt={item.productoNombre}
+									/>
 								</Link>
 								<div className="cart-item__details">
 									<h2>
 										<Link to={`/producto/${item.productoId}`}>{item.productoNombre}</Link>
 									</h2>
-									<p>{item.color || 'Zapatillas'} · Talle {item.talle}</p>
+									<p>{item.color || 'Color único'} · Talle {item.talle}</p>
 									<button
 										className="cart-item__remove"
 										type="button"

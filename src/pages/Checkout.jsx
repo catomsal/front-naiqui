@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import ShoePlaceholder from '../components/ShoePlaceholder.jsx'
+import ProductImage from '../components/ProductImage.jsx'
 import { apiRequest } from '../app/api.js'
 import { formatPrice } from '../app/format.js'
 import { fetchCartItems, resetCart } from '../store/slices/cartSlice.js'
@@ -89,11 +89,6 @@ function Checkout() {
 
 	return (
 		<main className="store-page">
-			<div className="checkout-steps" aria-label="Pasos de compra">
-				<span>1 Envío</span>
-				<span>2 Pago</span>
-				<span>3 Confirmar</span>
-			</div>
 			<header className="page-heading">
 				<h1>Finalizar compra</h1>
 			</header>
@@ -101,10 +96,7 @@ function Checkout() {
 			<div className="checkout-layout">
 				<form id="checkout-form" className="checkout-form" onSubmit={handleSubmit}>
 					<section className="checkout-form-card">
-						<div className="checkout-form-card__heading">
-							<h2>Datos de envío</h2>
-							<Link className="text-link" to="/perfil">¿Ya tenés cuenta? Perfil</Link>
-						</div>
+						<h2>Datos de envío</h2>
 						<div className="checkout-fields">
 							<div className="checkout-field">
 								<label htmlFor="checkout-name">Nombre y apellido</label>
@@ -222,11 +214,14 @@ function Checkout() {
 						{items.map((item) => (
 							<div className="checkout-summary-item" key={item.id}>
 								<div className="checkout-summary-item__image">
-									<ShoePlaceholder />
+									<ProductImage
+										src={item.imagenUrl}
+										alt={item.productoNombre}
+									/>
 								</div>
 								<div>
 									<strong>{item.productoNombre}</strong>
-									<p>Talle {item.talle} · Cant. {item.cantidad}</p>
+									<p>{item.color || 'Color único'} · Talle {item.talle} · Cant. {item.cantidad}</p>
 								</div>
 								<strong>
 									{formatPrice(Number(item.subtotal) || Number(item.precioUnitario) * item.cantidad)}

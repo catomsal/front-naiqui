@@ -61,7 +61,7 @@ const LoginJWT = () => {
             onChange={handleChange}
             required
             disabled={isLoading}
-            placeholder="usuario@tppresencial.com"
+            placeholder="usuario@naiqui.com"
           />
         </div>
 

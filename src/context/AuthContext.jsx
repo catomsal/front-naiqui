@@ -36,8 +36,17 @@ export function AuthProvider({ children }) {
 		setUser(null)
 	}
 
+	function updateUser(updatedUser) {
+		setUser((currentUser) => {
+			if (!currentUser) return currentUser
+			const nextUser = { ...currentUser, ...updatedUser }
+			localStorage.setItem('naiqui_user', JSON.stringify(nextUser))
+			return nextUser
+		})
+	}
+
 	return (
-		<AuthContext.Provider value={{ user, login, logout }}>
+		<AuthContext.Provider value={{ user, login, logout, updateUser }}>
 			{children}
 		</AuthContext.Provider>
 	)

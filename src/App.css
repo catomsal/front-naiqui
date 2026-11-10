@@ -502,9 +502,12 @@
 	display: grid;
 	width: 44px;
 	height: 44px;
+	padding: 0;
 	place-items: center;
-	border: 1px solid var(--accent);
+	border: 1px solid transparent;
 	border-radius: 50%;
+	background: transparent;
+	cursor: pointer;
 }
 
 .product-color span {
@@ -512,7 +515,34 @@
 	height: 32px;
 	border: 1px solid #d5d1cc;
 	border-radius: 50%;
-	background: #272727;
+}
+
+.product-color--selected {
+	border-color: var(--accent);
+}
+
+.product-color:focus-visible {
+	outline: 2px solid var(--ink);
+	outline-offset: 2px;
+}
+
+.product-color-options {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.product-stock {
+	margin: 10px 0 0;
+	color: var(--muted);
+	font-size: 13px;
+}
+
+.size-option input:disabled + span {
+	background: #f0eeeb;
+	color: #aaa49d;
+	text-decoration: line-through;
+	cursor: not-allowed;
 }
 
 .product-info fieldset {
@@ -621,6 +651,91 @@
 	border-radius: 12px;
 	background: #e6e1db;
 	color: #65615b;
+}
+
+.cart-item__product-image {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.order-list__customer {
+	margin: 10px 0;
+	color: var(--muted);
+	font-size: 13px;
+}
+
+.order-detail-main {
+	display: grid;
+	align-content: start;
+	gap: 16px;
+}
+
+.order-detail-card {
+	padding: 22px;
+	border-radius: var(--radius);
+	background: var(--surface);
+}
+
+.order-detail-card h2 {
+	margin: 0 0 16px;
+	font-size: 17px;
+}
+
+.order-detail-card .cart-item {
+	padding: 14px 0;
+	border-top: 1px solid var(--line);
+	background: transparent;
+}
+
+.order-detail-card .cart-item__details h3 {
+	margin: 0 0 4px;
+	font-size: 15px;
+}
+
+.order-delivery-details {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 14px 20px;
+	margin: 0;
+}
+
+.order-delivery-details div {
+	min-width: 0;
+}
+
+.order-delivery-details dt,
+.order-status-form label {
+	margin-bottom: 5px;
+	color: var(--muted);
+	font-size: 12px;
+	font-weight: 650;
+}
+
+.order-delivery-details dd {
+	margin: 0;
+	overflow-wrap: anywhere;
+	font-size: 14px;
+}
+
+.order-status-form {
+	display: grid;
+	gap: 10px;
+	margin: 18px 0;
+}
+
+.order-status-form label {
+	color: var(--ink);
+}
+
+.order-status-form select {
+	width: 100%;
+	min-height: 44px;
+	padding: 8px 12px;
+	border: 1px solid var(--line);
+	border-radius: 9px;
+	background: #fff;
+	color: var(--ink);
 }
 
 .cart-item__details h2 {
@@ -849,6 +964,19 @@
 	height: auto;
 }
 
+.checkout-summary-item__image img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.checkout-summary-item__image > span {
+	display: grid;
+	width: 100%;
+	height: 100%;
+	place-items: center;
+}
+
 .checkout-summary-item p {
 	margin: 3px 0 0;
 	color: var(--muted);
@@ -948,6 +1076,68 @@
 	justify-content: space-between;
 	gap: 12px;
 	font-size: 14px;
+}
+
+.order-list__date {
+	margin: -7px 0 0;
+	color: var(--muted);
+	font-size: 13px;
+}
+
+.user-management-list {
+	display: grid;
+	gap: 12px;
+}
+
+.user-role-card {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 160px auto;
+	align-items: center;
+	gap: 20px;
+	padding: 18px 20px;
+	border-radius: var(--radius);
+	background: var(--surface);
+}
+
+.user-role-card__identity {
+	display: grid;
+	gap: 5px;
+	min-width: 0;
+}
+
+.user-role-card__identity span {
+	overflow-wrap: anywhere;
+	color: var(--muted);
+	font-size: 13px;
+}
+
+.user-role-card__control {
+	display: grid;
+	gap: 6px;
+	font-size: 12px;
+	font-weight: 650;
+}
+
+.user-role-card__control select {
+	width: 100%;
+	min-height: 40px;
+	padding: 7px 10px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: #fff;
+	color: var(--ink);
+}
+
+.user-role-card__action {
+	display: grid;
+	justify-items: end;
+	gap: 7px;
+}
+
+.user-role-card__action p {
+	margin: 0;
+	padding: 6px 9px;
+	font-size: 12px;
 }
 
 .sr-only {
@@ -1054,6 +1244,20 @@
 	.cart-layout,
 	.checkout-layout {
 		grid-template-columns: 1fr;
+	}
+
+	.user-role-card {
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 12px;
+	}
+
+	.user-role-card__control {
+		grid-column: 1;
+	}
+
+	.user-role-card__action {
+		grid-column: 2;
+		grid-row: 1 / span 2;
 	}
 
 	.summary-card {

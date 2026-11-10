@@ -9,6 +9,22 @@ import { addToCart } from '../store/slices/cartSlice.js'
 import { useAuth } from '../context/useAuth.js'
 
 const sizes = [38, 39, 40, 41, 42, 43]
+const colorValues = {
+	negro: '#272727',
+	blanco: '#ffffff',
+	gris: '#888888',
+	azul: '#2563eb',
+	rojo: '#dc2626',
+	verde: '#16803c',
+	'marrón': '#8b5e3c',
+	'bordó': '#7f1d3f',
+	amarillo: '#facc15',
+	crema: '#e8dcc5',
+}
+
+function getColorValue(color) {
+	return colorValues[color?.toLocaleLowerCase('es-AR')] || '#a8a29e'
+}
 
 function ProductDetail() {
 	const { id } = useParams()
@@ -18,7 +34,8 @@ function ProductDetail() {
 	const { user } = useAuth()
 	const cartLoading = useSelector((state) => state.cart.loading)
 	const [productState, setProductState] = useState({ id: null, product: null, error: null })
-	const [selectedSize, setSelectedSize] = useState(40)
+	const [colorChoice, setColorChoice] = useState({ productId: null, color: null })
+	const [sizeChoice, setSizeChoice] = useState({ productId: null, size: null })
 	const [actionError, setActionError] = useState('')
 	const [added, setAdded] = useState(false)
 
@@ -44,6 +61,22 @@ function ProductDetail() {
 		? Math.round((1 - Number(product.precio) / Number(product.precioOriginal)) * 100)
 		: 0
 	const categoryLabel = product?.categoriaNombre || 'Zapatillas'
+	const variants = product?.variantes || []
+	const colors = [...new Set(variants.map((variant) => variant.color).filter(Boolean))]
+	const defaultColor = variants.some((variant) => variant.color === product?.color)
+		? product.color
+		: variants[0]?.color || product?.color || ''
+	const selectedColor = colorChoice.productId === product?.id ? colorChoice.color : defaultColor
+	const defaultSize = variants.find(
+		(variant) => variant.color === selectedColor && Number(variant.stock) > 0,
+	)?.talle || 40
+	const selectedSize = sizeChoice.productId === product?.id ? sizeChoice.size : Number(defaultSize)
+	const selectedVariant = variants.find(
+		(variant) => variant.color === selectedColor && Number(variant.talle) === selectedSize,
+	)
+	const selectedStock = variants.length
+		? Number(selectedVariant?.stock || 0)
+		: Number(product?.stock || 0)
 	const genderLabel = product?.genero || 'Unisex'
 	const categoryText =
 		categoryLabel.toLocaleLowerCase('es-AR') === genderLabel.toLocaleLowerCase('es-AR')
@@ -59,6 +92,10 @@ function ProductDetail() {
 	}
 
 	async function handleAddToCart() {
+		if (!selectedVariant || selectedStock <= 0) {
+			setActionError(`No hay stock disponible para el talle ${selectedSize} y el color seleccionado.`)
+			return
+		}
 		if (!user) {
 			navigate('/login', { state: { from: location } })
 			return
@@ -72,6 +109,7 @@ function ProductDetail() {
 					userId: user.id,
 					productoId: product.id,
 					talle: selectedSize,
+					color: selectedColor,
 					cantidad: 1,
 				}),
 			).unwrap()
@@ -145,12 +183,31 @@ function ProductDetail() {
 					<p className="product-info__description">{product.descripcion}</p>
 
 					<div className="product-option">
-						<div className="product-option__heading">
-							<span>Color</span>
-							<span className="muted">{product.color || 'Único'}</span>
-						</div>
-						<div className="product-color" aria-label={`Color ${product.color || 'único'}`}>
-							<span />
+						<div className="product-option__heading">Color</div>
+						<div className="product-color-options" role="group" aria-label="Elegir color">
+							{(colors.length ? colors : [product.color || 'Único']).map((color) => (
+								<button
+									className={`product-color${selectedColor === color ? ' product-color--selected' : ''}`}
+									key={color}
+									type="button"
+									aria-label={color}
+									aria-pressed={selectedColor === color}
+									onClick={() => {
+										setColorChoice({ productId: product.id, color })
+										const colorVariants = variants.filter((variant) => variant.color === color)
+										const sizeWithStock = colorVariants.find((variant) => Number(variant.stock) > 0)
+										setSizeChoice({
+											productId: product.id,
+											size: sizeWithStock
+												? Number(sizeWithStock.talle)
+												: Number(colorVariants[0]?.talle || 40),
+										})
+										setActionError('')
+									}}
+								>
+									<span style={{ backgroundColor: getColorValue(color) }} />
+								</button>
+							))}
 						</div>
 					</div>
 
@@ -166,12 +223,25 @@ function ProductDetail() {
 										name="size"
 										value={size}
 										checked={selectedSize === size}
-										onChange={() => setSelectedSize(size)}
+										disabled={variants.length > 0 && !variants.some(
+											(variant) => variant.color === selectedColor
+												&& Number(variant.talle) === size
+												&& Number(variant.stock) > 0,
+										)}
+										onChange={() => {
+											setSizeChoice({ productId: product.id, size })
+											setActionError('')
+										}}
 									/>
 									<span>{size}</span>
 								</label>
 							))}
 						</div>
+						<p className="product-stock" aria-live="polite">
+							{selectedStock > 0
+								? `${selectedStock} unidades disponibles`
+								: 'Sin stock para este talle y color'}
+						</p>
 					</fieldset>
 
 					{actionError && <p className="page-error" role="alert">{actionError}</p>}
@@ -181,13 +251,9 @@ function ProductDetail() {
 							className="primary-button full-width"
 							type="button"
 							onClick={handleAddToCart}
-							disabled={cartLoading || product.stock <= 0}
+							disabled={cartLoading}
 						>
-							{product.stock <= 0
-								? 'Sin stock'
-								: cartLoading
-									? 'Agregando...'
-									: 'Agregar al carrito'}
+							{cartLoading ? 'Agregando...' : 'Agregar al carrito'}
 						</button>
 					</div>
 					<div className="product-info__policies">

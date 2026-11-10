@@ -8,6 +8,7 @@ import './Navbar.css'
 
 function Navbar() {
 	const { user, logout } = useAuth()
+	const isStaff = ['ADMIN', 'VENDEDOR'].includes(user?.rol?.toUpperCase())
 	const dispatch = useDispatch()
 	const [searchParams, setSearchParams] = useSearchParams()
 	// Suscripción al slice de favoritos y carrito de Redux del profesor
@@ -18,14 +19,14 @@ function Navbar() {
 	const cartCount = cartItems.reduce((total, item) => total + (item.cantidad || 1), 0)
 
 	useEffect(() => {
-		if (user?.id) {
+		if (user?.id && !isStaff) {
 			dispatch(fetchCartItems(user.id))
 			dispatch(fetchFavorites(user.id))
 		} else {
 			dispatch(resetCart())
 			dispatch(resetFavorites())
 		}
-	}, [dispatch, user?.id])
+	}, [dispatch, isStaff, user?.id])
 
 	function handleSearch(event) {
 		event.preventDefault()
@@ -59,18 +60,38 @@ function Navbar() {
 				/>
 			</form>
 			<div className="navbar__links">
-				<NavLink to="/favoritos">
-					<span className="navbar__icon" aria-hidden="true">
-						<svg viewBox="0 0 24 24"><path d="M20.8 4.7a5.4 5.4 0 0 0-7.6 0L12 5.9l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.5 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" /></svg>
-					</span>
-					Favoritos ({favorites.length})
-				</NavLink>
-				<NavLink to="/carrito">
-					<span className="navbar__icon" aria-hidden="true">
-						<svg viewBox="0 0 24 24"><path d="M5 8h14l1 13H4L5 8Z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></svg>
-					</span>
-					Carrito ({cartCount})
-				</NavLink>
+				{user && !isStaff && (
+					<>
+						<NavLink to="/favoritos">
+							<span className="navbar__icon" aria-hidden="true">
+								<svg viewBox="0 0 24 24"><path d="M20.8 4.7a5.4 5.4 0 0 0-7.6 0L12 5.9l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.5 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" /></svg>
+							</span>
+							Favoritos ({favorites.length})
+						</NavLink>
+						<NavLink to="/carrito">
+							<span className="navbar__icon" aria-hidden="true">
+								<svg viewBox="0 0 24 24"><path d="M5 8h14l1 13H4L5 8Z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></svg>
+							</span>
+							Carrito ({cartCount})
+						</NavLink>
+					</>
+				)}
+				{user && (
+					<NavLink to="/pedidos">
+						<span className="navbar__icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24"><path d="M7 3.75h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.75a1 1 0 0 1 1-1Z" /><path d="M14 4v4h4M9 12h6M9 16h6" /></svg>
+						</span>
+						{isStaff ? 'Pedidos' : 'Mis pedidos'}
+					</NavLink>
+				)}
+				{user?.rol?.toUpperCase() === 'ADMIN' && (
+					<NavLink to="/usuarios">
+						<span className="navbar__icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3" /><path d="M3.5 20v-1.5a5.5 5.5 0 0 1 11 0V20ZM17 8h4M19 6v4M17 16h4M17 19h4" /></svg>
+						</span>
+						Usuarios
+					</NavLink>
+				)}
 				{user ? (
 					<>
 						<NavLink to="/perfil" className="navbar__account">

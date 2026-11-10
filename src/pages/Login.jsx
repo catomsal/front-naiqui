@@ -5,9 +5,9 @@ import { apiRequest } from '../app/api.js'
 
 const demoAccounts = import.meta.env.DEV
 	? [
-		{ role: 'Usuario', email: 'demo@tppresencial.com', password: '1234' },
-		{ role: 'Vendedor', email: 'vendedor@tppresencial.com', password: '1234' },
-		{ role: 'Administrador', email: 'admin@tppresencial.com', password: '1234' },
+		{ role: 'Usuario', email: 'demo@naiqui.com', password: '1234' },
+		{ role: 'Vendedor', email: 'vendedor@naiqui.com', password: '1234' },
+		{ role: 'Administrador', email: 'admin@naiqui.com', password: '1234' },
 	]
 	: []
 

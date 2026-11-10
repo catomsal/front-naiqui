@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import Navbar from './components/Navbar.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
+import AdminRoute from './components/AdminRoute.jsx'
 import ProductList from './components/ProductList.jsx'
 import ProductDetail from './pages/ProductDetail.jsx'
 import CategoryProducts from './pages/CategoryProducts.jsx'
@@ -12,6 +13,7 @@ import Register from './pages/Register.jsx'
 import Profile from './pages/Profile.jsx'
 import Favorites from './pages/Favorites.jsx'
 import Checkout from './pages/Checkout.jsx'
+import UserManagement from './pages/UserManagement.jsx'
 import './App.css'
 
 function App() {
@@ -71,6 +73,16 @@ function App() {
 					element={
 						<ProtectedRoute>
 							<Profile />
+						</ProtectedRoute>
+					}
+				/>
+				<Route
+					path="/usuarios"
+					element={
+						<ProtectedRoute>
+							<AdminRoute>
+								<UserManagement />
+							</AdminRoute>
 						</ProtectedRoute>
 					}
 				/>
