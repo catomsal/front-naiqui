@@ -90,6 +90,7 @@ function Login() {
 					{isLoading ? 'Ingresando...' : 'Ingresar'}
 				</button>
 			</form>
+			<p>¿Todavía no tenés cuenta? <Link className="text-link" to="/registro">Crear cuenta</Link></p>
 			{demoAccounts.length > 0 && (
 				<section className="demo-login" aria-labelledby="demo-login-title">
 					<div className="demo-login__heading">

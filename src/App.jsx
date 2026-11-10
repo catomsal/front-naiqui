@@ -8,6 +8,7 @@ import Cart from './pages/Cart.jsx'
 import OrderList from './pages/OrderList.jsx'
 import OrderDetail from './pages/OrderDetail.jsx'
 import Login from './pages/Login.jsx'
+import Register from './pages/Register.jsx'
 import Profile from './pages/Profile.jsx'
 import Favorites from './pages/Favorites.jsx'
 import Checkout from './pages/Checkout.jsx'
@@ -24,6 +25,7 @@ function App() {
 				<Route path="/categoria/:id" element={<CategoryProducts />} />
 				<Route path="/login" element={<Login />} />
 				<Route path="/login-context" element={<Login />} />
+				<Route path="/registro" element={<Register />} />
 				<Route
 					path="/favoritos"
 					element={
