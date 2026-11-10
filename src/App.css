@@ -1165,6 +1165,200 @@
 	background: #fff;
 }
 
+.product-management-heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 20px;
+}
+
+.product-management-heading .page-heading {
+	margin: 0;
+}
+
+.product-management-heading .primary-button {
+	flex: 0 0 auto;
+}
+
+.product-create-card {
+	overflow: hidden;
+	margin-bottom: 18px;
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	background: var(--surface);
+}
+
+.product-create-card h2 {
+	margin: 0;
+	padding: 18px 18px 0;
+	font-size: 18px;
+}
+
+.product-management-list {
+	display: grid;
+	gap: 12px;
+}
+
+.product-management-card {
+	overflow: hidden;
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	background: var(--surface);
+}
+
+.product-management-card__summary {
+	display: grid;
+	grid-template-columns: 76px minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 16px;
+	padding: 14px;
+}
+
+.product-management-card__summary > img,
+.product-management-card__placeholder {
+	display: grid;
+	width: 76px;
+	height: 76px;
+	place-items: center;
+	border-radius: 10px;
+	background: #e6e1db;
+	color: var(--muted);
+	object-fit: contain;
+	font-size: 11px;
+}
+
+.product-management-card__summary > div:nth-child(2) {
+	display: grid;
+	gap: 5px;
+	min-width: 0;
+}
+
+.product-management-card__summary span {
+	color: var(--muted);
+	font-size: 13px;
+}
+
+.product-management-card__summary del {
+	color: var(--muted);
+}
+
+.product-editor {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 14px;
+	padding: 18px;
+	border-top: 1px solid var(--line);
+	background: #faf9f7;
+}
+
+.product-editor label {
+	display: grid;
+	align-content: start;
+	gap: 6px;
+	font-size: 13px;
+	font-weight: 650;
+}
+
+.product-editor input,
+.product-editor select,
+.product-editor textarea {
+	width: 100%;
+	min-height: 42px;
+	padding: 9px 11px;
+	border: 1px solid #dedad4;
+	border-radius: 8px;
+	background: #fff;
+	color: var(--ink);
+	font: inherit;
+	font-size: 14px;
+}
+
+.product-editor textarea {
+	resize: vertical;
+}
+
+.product-editor__wide,
+.product-editor__stock,
+.product-editor__actions,
+.product-editor__variants {
+	grid-column: 1 / -1;
+}
+
+.product-editor__variants {
+	display: grid;
+	gap: 14px;
+	min-width: 0;
+	margin: 0;
+	padding: 14px;
+	border: 1px solid var(--line);
+	border-radius: 10px;
+}
+
+.product-editor__variants legend {
+	padding: 0 6px;
+	font-size: 13px;
+	font-weight: 650;
+}
+
+.product-editor__variant-color {
+	display: grid;
+	gap: 10px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid var(--line);
+}
+
+.product-editor__variant-heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	font-size: 13px;
+}
+
+.product-editor__variant-sizes {
+	display: grid;
+	grid-template-columns: repeat(6, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.product-editor__variant-sizes label,
+.product-editor__add-color label {
+	display: grid;
+	gap: 5px;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.product-editor__add-color {
+	display: flex;
+	align-items: end;
+	gap: 10px;
+}
+
+.product-editor__add-color label {
+	flex: 1;
+}
+
+.product-editor__hint,
+.product-editor__stock {
+	margin: 0;
+	color: var(--muted);
+	font-size: 12px;
+	font-weight: 400;
+}
+
+.product-editor__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.product-editor button:disabled {
+	cursor: wait;
+	opacity: 0.65;
+}
+
 @media (max-width: 900px) {
 	.store-catalog {
 		grid-template-columns: 160px minmax(0, 1fr);
@@ -1258,6 +1452,29 @@
 	.user-role-card__action {
 		grid-column: 2;
 		grid-row: 1 / span 2;
+	}
+
+	.product-management-heading {
+		flex-wrap: wrap;
+	}
+
+	.product-management-heading .primary-button {
+		width: 100%;
+	}
+
+	.product-editor {
+		grid-template-columns: 1fr;
+	}
+
+	.product-editor__wide,
+	.product-editor__stock,
+	.product-editor__actions,
+	.product-editor__variants {
+		grid-column: 1;
+	}
+
+	.product-editor__variant-sizes {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
 
 	.summary-card {

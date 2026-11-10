@@ -32,6 +32,7 @@ function ProductDetail() {
 	const navigate = useNavigate()
 	const location = useLocation()
 	const { user } = useAuth()
+	const isStaff = ['ADMIN', 'VENDEDOR'].includes(user?.rol?.toUpperCase())
 	const cartLoading = useSelector((state) => state.cart.loading)
 	const [productState, setProductState] = useState({ id: null, product: null, error: null })
 	const [colorChoice, setColorChoice] = useState({ productId: null, color: null })
@@ -92,6 +93,10 @@ function ProductDetail() {
 	}
 
 	async function handleAddToCart() {
+		if (isStaff) {
+			setActionError('Las cuentas de vendedor y administrador no pueden comprar productos.')
+			return
+		}
 		if (!selectedVariant || selectedStock <= 0) {
 			setActionError(`No hay stock disponible para el talle ${selectedSize} y el color seleccionado.`)
 			return
@@ -178,7 +183,7 @@ function ProductDetail() {
 								<p className="product-info__price">{formatPrice(product.precio)}</p>
 							</div>
 						</div>
-						<FavoriteButton product={product} />
+						{!isStaff && <FavoriteButton product={product} />}
 					</div>
 					<p className="product-info__description">{product.descripcion}</p>
 
@@ -244,18 +249,27 @@ function ProductDetail() {
 						</p>
 					</fieldset>
 
-					{actionError && <p className="page-error" role="alert">{actionError}</p>}
-					{added && <p className="page-success" role="status">Agregada al carrito.</p>}
-					<div className="product-info__actions">
-						<button
-							className="primary-button full-width"
-							type="button"
-							onClick={handleAddToCart}
-							disabled={cartLoading}
-						>
-							{cartLoading ? 'Agregando...' : 'Agregar al carrito'}
-						</button>
-					</div>
+					{!isStaff && (
+						<>
+							{actionError && <p className="page-error" role="alert">{actionError}</p>}
+							{added && <p className="page-success" role="status">Agregada al carrito.</p>}
+							<div className="product-info__actions">
+								<button
+									className="primary-button full-width"
+									type="button"
+									onClick={handleAddToCart}
+									disabled={cartLoading}
+								>
+									{cartLoading ? 'Agregando...' : 'Agregar al carrito'}
+								</button>
+							</div>
+						</>
+					)}
+					{isStaff && (
+						<p className="muted" role="status">
+							Las cuentas de vendedor y administrador no pueden agregar productos al carrito.
+						</p>
+					)}
 					<div className="product-info__policies">
 						<span>Envíos coordinados para cada compra.</span>
 						<span>Cambios y devoluciones sujetos a disponibilidad.</span>

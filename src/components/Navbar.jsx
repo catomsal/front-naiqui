@@ -60,6 +60,14 @@ function Navbar() {
 				/>
 			</form>
 			<div className="navbar__links">
+				{isStaff && (
+					<NavLink to="/productos/gestionar">
+						<span className="navbar__icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24"><path d="m3 7 9-4 9 4-9 4-9-4Z" /><path d="m3 12 9 4 9-4M3 17l9 4 9-4M3 7v10M21 7v10" /></svg>
+						</span>
+						Productos
+					</NavLink>
+				)}
 				{user && !isStaff && (
 					<>
 						<NavLink to="/favoritos">
@@ -87,7 +95,7 @@ function Navbar() {
 				{user?.rol?.toUpperCase() === 'ADMIN' && (
 					<NavLink to="/usuarios">
 						<span className="navbar__icon" aria-hidden="true">
-							<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3" /><path d="M3.5 20v-1.5a5.5 5.5 0 0 1 11 0V20ZM17 8h4M19 6v4M17 16h4M17 19h4" /></svg>
+							<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3" /><path d="M3.5 20v-1.5a5.5 5.5 0 0 1 11 0V20ZM16 11a3 3 0 1 0 0-6M17 15a5.5 5.5 0 0 1 3.5 5" /></svg>
 						</span>
 						Usuarios
 					</NavLink>

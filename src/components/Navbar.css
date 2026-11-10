@@ -94,6 +94,9 @@
 
 .navbar__account {
 	max-width: 100px;
+	margin-left: 2px;
+	padding-left: 16px;
+	border-left: 1px solid #dcd8d2;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
