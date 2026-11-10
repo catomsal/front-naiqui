@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../store/slices/authSlice';
+import { useAuth } from '../context/useAuth.js'
 
 const LoginJWT = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { login } = useAuth()
 
   // Obtener el estado de autenticación desde Redux
   const { isAuthenticated, isLoading, error } = useSelector((state) => state.auth);
@@ -25,7 +27,9 @@ const LoginJWT = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(loginUser(credentials));
+    dispatch(loginUser(credentials)).then((result) => {
+      if (loginUser.fulfilled.match(result)) login(result.payload);
+    });
   };
 
   // Redirigir cuando el login sea exitoso

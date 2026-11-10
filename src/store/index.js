@@ -10,6 +10,6 @@ export const store = configureStore({
   reducer: {
     cart: cartReducer,        // Gestiona el estado del carrito
     favorite: favoriteReducer, // Gestiona el estado de favoritos
-    auth: authReducer,        // Gestiona el estado de autenticación y token
+    auth: authReducer,        // Gestiona el estado de autenticación
   },
 });

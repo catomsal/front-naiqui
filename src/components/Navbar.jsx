@@ -34,6 +34,14 @@ function Navbar() {
 		setSearchParams(query ? { ...Object.fromEntries(searchParams), q: query } : {})
 	}
 
+	async function handleLogout() {
+		try {
+			await logout()
+		} catch (error) {
+			console.error('No se pudo cerrar la sesión en el servidor:', error)
+		}
+	}
+
 	return (
 		<nav className="navbar">
 			<Link to="/" className="navbar__brand">
@@ -105,7 +113,7 @@ function Navbar() {
 						<NavLink to="/perfil" className="navbar__account">
 							{user.nombre}
 						</NavLink>
-						<button className="navbar__logout" onClick={logout} type="button">
+						<button className="navbar__logout" onClick={handleLogout} type="button">
 							Salir
 						</button>
 					</>

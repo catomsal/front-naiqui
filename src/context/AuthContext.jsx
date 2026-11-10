@@ -1,52 +1,63 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { apiRequest } from '../app/api.js'
 import { AuthContext } from './authContext.js'
 
 export function AuthProvider({ children }) {
-	const [user, setUser] = useState(() => {
-		const savedUser = localStorage.getItem('naiqui_user')
-		if (!savedUser) return null
+	const [user, setUser] = useState(null)
+	const [isLoading, setIsLoading] = useState(true)
+	const authVersion = useRef(0)
 
-		try {
-			return JSON.parse(savedUser)
-		} catch (error) {
-			console.error('No se pudo recuperar la sesión de Naiqui:', error)
-			localStorage.removeItem('naiqui_user')
-			localStorage.removeItem('token')
-			return null
+	useEffect(() => {
+		let isMounted = true
+		const requestVersion = authVersion.current
+		localStorage.removeItem('token')
+		localStorage.removeItem('naiqui_user')
+
+		apiRequest('/me')
+			.then((session) => {
+				if (isMounted && requestVersion === authVersion.current) setUser(session)
+			})
+			.catch(() => {
+				if (isMounted && requestVersion === authVersion.current) setUser(null)
+			})
+			.finally(() => {
+				if (isMounted && requestVersion === authVersion.current) setIsLoading(false)
+			})
+
+		return () => {
+			isMounted = false
 		}
-	})
+	}, [])
 
-	// Recibe la respuesta de POST /api/login (LoginResponseDTO del back)
 	function login(data) {
-		// Guardamos el token JWT en localStorage para enviarlo en las rutas protegidas
-		localStorage.setItem('token', data.token)
+		authVersion.current += 1
 		const authenticatedUser = {
 			id: data.id,
 			nombre: data.nombre,
 			email: data.email,
 			rol: data.rol,
 		}
-		localStorage.setItem('naiqui_user', JSON.stringify(authenticatedUser))
 		setUser(authenticatedUser)
+		setIsLoading(false)
 	}
 
-	function logout() {
-		localStorage.removeItem('token')
-		localStorage.removeItem('naiqui_user')
-		setUser(null)
+	async function logout() {
+		try {
+			await apiRequest('/logout', { method: 'POST' })
+		} finally {
+			authVersion.current += 1
+			setUser(null)
+			localStorage.removeItem('token')
+			localStorage.removeItem('naiqui_user')
+		}
 	}
 
 	function updateUser(updatedUser) {
-		setUser((currentUser) => {
-			if (!currentUser) return currentUser
-			const nextUser = { ...currentUser, ...updatedUser }
-			localStorage.setItem('naiqui_user', JSON.stringify(nextUser))
-			return nextUser
-		})
+		setUser((currentUser) => currentUser && { ...currentUser, ...updatedUser })
 	}
 
 	return (
-		<AuthContext.Provider value={{ user, login, logout, updateUser }}>
+		<AuthContext.Provider value={{ user, isLoading, login, logout, updateUser }}>
 			{children}
 		</AuthContext.Provider>
 	)

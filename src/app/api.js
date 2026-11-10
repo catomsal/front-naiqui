@@ -1,13 +1,40 @@
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 
+let csrfTokenRequest = null
+
+const methodsRequiringCsrf = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
+
+async function getCsrfToken() {
+	if (!csrfTokenRequest) {
+		csrfTokenRequest = fetch(`${API_URL}/csrf`, {
+			headers: { Accept: 'application/json' },
+			credentials: 'include',
+		})
+			.then(async (response) => {
+				if (!response.ok) {
+					throw new Error(`No se pudo preparar la solicitud segura (HTTP ${response.status})`)
+				}
+				const data = await response.json()
+				return data.token
+			})
+			.finally(() => {
+				csrfTokenRequest = null
+			})
+	}
+	return csrfTokenRequest
+}
+
 export async function apiRequest(path, options = {}) {
-	const token = localStorage.getItem('token')
+	const method = (options.method || 'GET').toUpperCase()
+	const token = methodsRequiringCsrf.has(method) ? await getCsrfToken() : null
 	const response = await fetch(`${API_URL}${path}`, {
 		...options,
+		method,
+		credentials: 'include',
 		headers: {
 			Accept: 'application/json',
 			...(options.body ? { 'Content-Type': 'application/json' } : {}),
-			...(token ? { Authorization: `Bearer ${token}` } : {}),
+			...(token ? { 'X-XSRF-TOKEN': token } : {}),
 			...options.headers,
 		},
 	})
