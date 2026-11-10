@@ -43,6 +43,20 @@ function ProductDetail() {
 	const discount = hasDiscount
 		? Math.round((1 - Number(product.precio) / Number(product.precioOriginal)) * 100)
 		: 0
+	const categoryLabel = product?.categoriaNombre || 'Zapatillas'
+	const genderLabel = product?.genero || 'Unisex'
+	const categoryText =
+		categoryLabel.toLocaleLowerCase('es-AR') === genderLabel.toLocaleLowerCase('es-AR')
+			? categoryLabel
+			: `${categoryLabel} · ${genderLabel}`
+
+	function handleBack() {
+		if (location.key === 'default') {
+			navigate('/')
+		} else {
+			navigate(-1)
+		}
+	}
 
 	async function handleAddToCart() {
 		if (!user) {
@@ -82,6 +96,16 @@ function ProductDetail() {
 
 	return (
 		<main className="store-page">
+			<button
+				type="button"
+				className="back-button"
+				onClick={handleBack}
+				aria-label="Volver a la página anterior"
+			>
+				<span className="back-button__arrow" aria-hidden="true">←</span>
+				Volver
+			</button>
+
 			<div className="breadcrumbs">
 				<Link to="/">Inicio</Link>
 				<span>/</span>
@@ -99,19 +123,10 @@ function ProductDetail() {
 							<ShoePlaceholder />
 						)}
 					</div>
-					<div className="product-gallery__thumbs" aria-hidden="true">
-						{sizes.slice(0, 4).map((size) => (
-							<div className="product-gallery__thumb" key={size}>
-								<ShoePlaceholder />
-							</div>
-						))}
-					</div>
 				</div>
 
 				<section className="product-info">
-					<p className="product-info__category">
-						{product.categoriaNombre || 'Zapatillas'} · {product.genero || 'Unisex'}
-					</p>
+					<p className="product-info__category">{categoryText}</p>
 					<div className="product-info__heading">
 						<div>
 							<h1>{product.nombre}</h1>
@@ -142,7 +157,6 @@ function ProductDetail() {
 					<fieldset className="product-option">
 						<legend className="product-option__heading">
 							<span>Talle (AR)</span>
-							<a className="text-link" href="#guia-de-talles">Guía de talles</a>
 						</legend>
 						<div className="size-options">
 							{sizes.map((size) => (
@@ -175,15 +189,11 @@ function ProductDetail() {
 									? 'Agregando...'
 									: 'Agregar al carrito'}
 						</button>
-						<Link className="secondary-button full-width" to="/favoritos">
-							♡ &nbsp; Ver mis favoritos
-						</Link>
 					</div>
 					<div className="product-info__policies">
 						<span>Envíos coordinados para cada compra.</span>
 						<span>Cambios y devoluciones sujetos a disponibilidad.</span>
 					</div>
-					<span id="guia-de-talles" className="sr-only">Los talles disponibles van del 38 al 43.</span>
 				</section>
 			</div>
 		</main>

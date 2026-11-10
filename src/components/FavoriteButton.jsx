@@ -1,9 +1,12 @@
 import { useDispatch, useSelector } from 'react-redux'
-import { toggleFavorite, toggleFavoriteOnServer } from '../store/slices/favoriteSlice.js'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { toggleFavoriteOnServer } from '../store/slices/favoriteSlice.js'
 import { useAuth } from '../context/useAuth.js'
 
 function FavoriteButton({ product }) {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
   const favoriteItems = useSelector((state) => state.favorite.items)
   const favoriteLoading = useSelector((state) => state.favorite.loading)
@@ -11,11 +14,11 @@ function FavoriteButton({ product }) {
 
   function handleToggle() {
     if (!product) return
-    if (user?.id) {
-      dispatch(toggleFavoriteOnServer({ userId: user.id, product, isFavorite: isFav }))
+    if (!user?.id) {
+      navigate('/login', { state: { from: location } })
       return
     }
-    dispatch(toggleFavorite(product))
+    dispatch(toggleFavoriteOnServer({ userId: user.id, product, isFavorite: isFav }))
   }
 
   return (

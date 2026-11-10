@@ -24,7 +24,14 @@ function App() {
 				<Route path="/categoria/:id" element={<CategoryProducts />} />
 				<Route path="/login" element={<Login />} />
 				<Route path="/login-context" element={<Login />} />
-				<Route path="/favoritos" element={<Favorites />} />
+				<Route
+					path="/favoritos"
+					element={
+						<ProtectedRoute>
+							<Favorites />
+						</ProtectedRoute>
+					}
+				/>
 				<Route
 					path="/carrito"
 					element={

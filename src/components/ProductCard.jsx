@@ -12,6 +12,12 @@ function ProductCard({ product }) {
 		currency: 'ARS',
 		maximumFractionDigits: 0,
 	}).format(product.precio)
+	const categoryLabel = product.categoriaNombre || 'Zapatillas'
+	const genderLabel = product.genero || 'Unisex'
+	const categoryText =
+		categoryLabel.toLocaleLowerCase('es-AR') === genderLabel.toLocaleLowerCase('es-AR')
+			? categoryLabel
+			: `${categoryLabel} · ${genderLabel}`
 
 	return (
 		<article className="product-card">
@@ -29,9 +35,7 @@ function ProductCard({ product }) {
 					</span>
 				)}
 				{hasDiscount && <span className="product-card__discount">{discount}% OFF</span>}
-				<span className="product-card__category">
-					{product.categoriaNombre || 'Zapatillas'} · {product.genero || 'Unisex'}
-				</span>
+				<span className="product-card__category">{categoryText}</span>
 			</Link>
 			<div className="product-card__details">
 				<p className="product-card__brand">{product.marca}</p>
