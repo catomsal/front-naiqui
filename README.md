@@ -30,3 +30,37 @@ del README del repositorio del backend.
 npm run build
 npm run lint
 ```
+
+## Estructura del proyecto
+
+```text
+src/
+├── app/          # api.js (cliente fetch con CSRF y cookies) y format.js (formato de precios)
+├── components/   # componentes reutilizables y rutas protegidas
+├── context/      # useAuth: hook que envuelve el estado de autenticación de Redux
+├── pages/        # una pantalla por ruta (Catálogo, Detalle, Carrito, Checkout, Pedidos, etc.)
+├── store/        # store de Redux Toolkit
+│   └── slices/   # authSlice, cartSlice y favoriteSlice
+├── App.jsx       # definición de rutas
+└── main.jsx      # punto de entrada: Provider de Redux y BrowserRouter
+```
+
+## Estado global y sesión
+
+El estado compartido se maneja con **Redux Toolkit**. El store tiene tres slices:
+
+- `auth`: usuario logueado, estado de carga y errores.
+- `cart`: ítems del carrito, sincronizados con el backend.
+- `favorite`: productos favoritos del usuario.
+
+Las llamadas a la API se hacen con `createAsyncThunk` dentro de cada slice, de modo que los estados
+`pending`, `fulfilled` y `rejected` se manejan en un solo lugar.
+
+El JWT viaja en una **cookie HttpOnly** que gestiona el backend; el front no lo guarda ni lo lee.
+Como el store vive en memoria, al recargar la página `App.jsx` despacha `restoreSession`, que consulta
+`GET /api/me` para recuperar al usuario.
+
+## Rutas protegidas
+
+- `ProtectedRoute`: exige usuario logueado.
+- `AdminRoute`, `StaffRoute` y `CustomerRoute`: exigen un rol determinado y se anidan dentro de `ProtectedRoute`.
