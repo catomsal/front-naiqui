@@ -12,10 +12,19 @@ function getUser(session) {
 	}
 }
 
+
+// Thunk que restaura la sesión al abrir o recargar la app.
+// Llama a GET /api/me: el navegador envía solo la cookie HttpOnly con el JWT,
+// y si es válida el backend devuelve el usuario. Se despacha desde App.jsx.
+
 export const restoreSession = createAsyncThunk(
 	'auth/restoreSession',
 	() => apiRequest('/me'),
 )
+
+
+// Thunk de login: envía las credenciales a POST /api/login.
+// Si salen bien, el backend responde con el usuario y setea la cookie HttpOnly.
 
 export const loginUser = createAsyncThunk(
 	'auth/loginUser',
@@ -31,6 +40,13 @@ export const logoutUser = createAsyncThunk(
 		await apiRequest('/logout', { method: 'POST' })
 	},
 )
+
+
+// Slice de autenticación. El estado vive en memoria (se pierde al recargar);
+// por eso al iniciar la app se dispara restoreSession.
+// - user: usuario logueado (null si no hay sesión)
+// - isLoading: true mientras se verifica la sesión, para no redirigir al login antes de tiempo
+// - error: mensaje del último fallo de login o logout
 
 const authSlice = createSlice({
 	name: 'auth',
@@ -54,6 +70,8 @@ const authSlice = createSlice({
 			state.error = null
 		},
 	},
+
+	// Cada thunk tiene tres estados: pending (en curso), fulfilled (salió bien) y rejected (falló).
 	extraReducers: (builder) => {
 		builder
 			.addCase(restoreSession.pending, (state) => {
